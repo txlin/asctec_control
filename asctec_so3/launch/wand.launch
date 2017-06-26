@@ -5,7 +5,7 @@
   <arg name="controller" value="asctec_so3_control" />
   <arg name="q_frame" value="/vicon/hummingbird_1/hummingbird_1" />
   <arg name="w_frame" value="/odom" />
-	<arg name="rviz" value="basic.rviz"/>
+	<arg name="rviz" value="wand.rviz"/>
 	
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
   
@@ -44,7 +44,7 @@
      <param name="rc_data_rate" value="0"/>
      <param name="ctrl_out_rate" value="10"/>
      <param name="gps_data_advanced_rate" value="0"/>
-     <remap from="~cmd_si" to="/asctec_so3_control/si_command" />
+     <remap from="~cmd_si" to="/asctec_so3_control/si_remap" />
   </node>
 
   <node pkg="asctec_so3"
@@ -69,9 +69,12 @@
   </node>
 
 	<node pkg="asctec_so3"
-		type="speed_test_node"
-		name="speedy"
+		type="nl_wand_node"
+		name="wandy"
 		output="screen">
+		<param name="q_name" value="$(arg controller)"/>
+    <param name="wand_frame" value="/vicon/foam_wand/foam_wand"/>
+    <param name="w_frame" value="$(arg w_frame)"/>
 		<param name="topic_name" value="$(arg controller)"/>
 	</node>
 

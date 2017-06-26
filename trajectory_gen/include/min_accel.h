@@ -7,6 +7,7 @@
 #include <asctec_msgs/MinAccelCmd.h>
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Empty.h>
 #include <math.h>
 #include <string.h>
 #include <iostream>
@@ -22,6 +23,7 @@ class MinAccel
 		asctec_msgs::PositionCmd* getNextCommand(void);
 		void setState(nav_msgs::Odometry odom);
 		void addWaypoint(asctec_msgs::MinAccelCmd wp);
+		void resetWaypoints(void);
 		bool getStatus(void);
 
 	private:

@@ -1,11 +1,11 @@
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 #include <asctec_msgs/PositionCmd.h>
+#include <asctec_msgs/SICmd.h>
 #include <std_msgs/Bool.h>
 #include <Eigen/Geometry>
 #include <SO3Control.h>
 #include "SO3Control.cpp"
-#include <asctec_so3/SICmd.h>
 #include <tf/transform_datatypes.h>
 
 #define MAX_THRUST 13.184
@@ -28,7 +28,7 @@ void publishSO3Command(void)
   const Eigen::Vector3d &force = controller.getComputedForce();
   const Eigen::Quaterniond &orientation = controller.getComputedOrientation();
   const Eigen::Vector3d &omg_ = controller.getDesiredAngularVelocity();
-  asctec_so3::SICmd si_command;
+  asctec_msgs::SICmd si_command;
   tf::Quaternion q(orientation.x(), orientation.y(), orientation.z(), orientation.w());
   double roll, pitch, yaw;
   tf::Matrix3x3 m(q);
@@ -63,7 +63,7 @@ void position_cmd_callback(const asctec_msgs::PositionCmd::ConstPtr &cmd)
 		des_yaw = cmd->yaw[0];
 		des_yaw_dot = cmd->yaw[1];
 		position_cmd_updated = true;
-
+		
 		publishSO3Command();
 	}
 }
@@ -86,13 +86,14 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr &odom)
 		des_pos = position;
 		des_vel = velocity;
 		des_acc = Eigen::Vector3d(0, 0, 0);
+		publishSO3Command();
 		position_cmd_init = true;
 	}
 
 	if(!position_cmd_updated) {
 		publishSO3Command();
-    position_cmd_updated = false;
 	}
+	position_cmd_updated = false;
 }
 
 void enable_motors_callback(const std_msgs::Bool::ConstPtr &msg)
@@ -137,7 +138,7 @@ int main(int argc, char **argv)
   ros::Subscriber enable_motors_sub = n.subscribe("motors", 2, &enable_motors_callback,
                                                   ros::TransportHints().tcpNoDelay());
 
-  si_cmd_pub = n.advertise<asctec_so3::SICmd>("si_command", 10);
+  si_cmd_pub = n.advertise<asctec_msgs::SICmd>("si_command", 10);
   ros::spin();
 
   return 0;

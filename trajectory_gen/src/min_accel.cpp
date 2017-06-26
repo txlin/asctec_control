@@ -113,13 +113,31 @@ bool MinAccel::getStatus(void) {
 	return T.size() == 0;
 }
 
+void MinAccel::resetWaypoints(void) {
+	if(T.size() == 0){ ROS_INFO("Waypoint List Empty"); return;}
+	delete Xx.front();
+	delete Xy.front();
+	delete Xz.front();
+	delete Xyaw.front();
+
+  T.erase(T.begin());
+  Xx.erase(Xx.begin());
+  Xy.erase(Xy.begin());
+  Xz.erase(Xz.begin());
+  Xyaw.erase(Xyaw.begin());
+}
+
 asctec_msgs::PositionCmd* MinAccel::getNextCommand(void) {  		
   if(T.size() != 0) {
   	double t = ros::Time::now().toSec() - t0.toSec();
     if(t >= T.front()) {
       t0 = ros::Time::now();
-      T.erase(T.begin());
+			delete Xx.front();
+			delete Xy.front();
+			delete Xz.front();
+			delete Xyaw.front();
 
+      T.erase(T.begin());
       Xx.erase(Xx.begin());
       Xy.erase(Xy.begin());
       Xz.erase(Xz.begin());

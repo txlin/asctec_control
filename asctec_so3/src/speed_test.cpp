@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
   ros::param::get("~topic_name", topic_name);
   
 	/* -------------------- Publishers, and Subscribers -------------------- */
-  timer = nh.createTimer(ros::Duration(2.0), timerCallback);
+  timer = nh.createTimer(ros::Duration(3.0), timerCallback);
 	timer.stop();
 
   waypoints = nh.advertise<asctec_msgs::MinAccelCmd>(topic_name + "/waypoints", 10); 			// Position goals to linear and nonlinear controllers
@@ -44,9 +44,10 @@ int main(int argc, char** argv) {
 	waypoint.position.z = 1.0;
 	waypoint.time = 4.0;
 	ros::Duration(2.0).sleep();
+	
 	waypoints.publish(waypoint);
-
-	waypoint.position.y = 0.5;
+	waypoint.position.y = 1.0;
+	
 	ROS_INFO("Publishing to %s", (topic_name + "/waypoints").c_str());
 	ros::spin();
 

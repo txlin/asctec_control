@@ -4,4 +4,3 @@ geometry_msgs/Vector3 velocity
 geometry_msgs/Vector3 accel
 float64[3] yaw
 float64 time
-bool reset
