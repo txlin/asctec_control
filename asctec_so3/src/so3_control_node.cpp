@@ -16,7 +16,7 @@ ros::Publisher si_cmd_pub;
 
 bool position_cmd_updated = false, position_cmd_init = false;
 Eigen::Vector3d des_pos, des_vel, des_acc, kx, kv;
-double des_yaw = 0, des_yaw_dot = 0;
+double des_yaw = 0, des_yaw_dot = 0, ky = 5.0;
 double current_yaw = 0;
 bool enable_motors = false;
 
@@ -48,7 +48,7 @@ void publishSO3Command(void)
   }
   si_command.roll = roll;
   si_command.pitch = -pitch;
-  si_command.yaw = yaw;
+  si_command.yaw = ky*(current_yaw-des_yaw);
   
   si_cmd_pub.publish(si_command);
 }
@@ -86,6 +86,9 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr &odom)
 		des_pos = position;
 		des_vel = velocity;
 		des_acc = Eigen::Vector3d(0, 0, 0);
+		des_yaw = current_yaw;
+		des_yaw_dot = 0.0;
+
 		publishSO3Command();
 		position_cmd_init = true;
 	}
@@ -121,6 +124,7 @@ int main(int argc, char **argv)
   std::vector<double> kx_list, kv_list;
   n.getParam("gains/pos", kx_list);
   n.getParam("gains/vel", kv_list);
+	n.getParam("gains/yaw", ky);
 
   // high level controller gains
   kx(0) = kx_list[0];  
@@ -128,7 +132,8 @@ int main(int argc, char **argv)
   kx(2) = kx_list[2];  
   kv(0) = kv_list[0];  
   kv(1) = kv_list[1];  
-  kv(2) = kv_list[2];  
+  kv(2) = kv_list[2];   
+//  ky(1) = ky_list[1];  
 
   ros::Subscriber odom_sub = n.subscribe("odom", 10, &odom_callback,
                                          ros::TransportHints().tcpNoDelay());

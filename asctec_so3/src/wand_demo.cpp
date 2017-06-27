@@ -41,12 +41,10 @@
 #define kd
 #define mg 0.25
 
-using namespace std;
-
 int state = 0;
 bool isDone = true;
 
-string world, quad_name, wand_frame, topic;
+std::string world, quad_name, wand_frame, topic;
 nav_msgs::Odometry odom_;
 asctec_msgs::SICmd nl_cmd;
 
@@ -452,13 +450,14 @@ int main(int argc, char** argv) {
 	border_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/border", 10);
 	sborder_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/soft_border", 10);
 
-	si_sub = nh.subscribe(topic + "/si_command", 10, siCallback);
+	si_sub = nh.subscribe(topic + "/si_command", 1, siCallback);
 	status_sub = nh.subscribe(topic + "/status", 10, statusCallback);
 	odom_sub = nh.subscribe(topic + "/odom", 10, odomCallback);
 
 	tf::TransformListener listener;	
 	tf::StampedTransform transform;
 	listener.waitForTransform(world, wand_frame, ros::Time(0), ros::Duration(3.0));
+	ros::Duration(1.0).sleep();
 
 	ROS_INFO("Running: Wand Listener");
 
@@ -488,12 +487,14 @@ int main(int argc, char** argv) {
 				    new_cmd = *setHRIBehavior(&transform);
 				    new_cmd = *limitXY(&new_cmd);
 				    new_cmd.thrust = nl_cmd.thrust;
-//						new_cmd.thrust = kp*(1.0-odom_.pose.pose.position.z)+kd*(-odom_.twist.twist.linear.z)+mg;
 				    new_cmd.yaw = nl_cmd.yaw;
-				
+						new_cmd.cmd[0] = new_cmd.cmd[1] = new_cmd.cmd[2] = new_cmd.cmd[3] = true;
+
 				    asctec_msgs::PositionCmd nl_pcmd;
 				    nl_pcmd.position.x = odom_.pose.pose.position.x;
 				    nl_pcmd.position.y = odom_.pose.pose.position.y;
+				    nl_pcmd.velocity.x = odom_.twist.twist.linear.x;
+				    nl_pcmd.velocity.y = odom_.twist.twist.linear.y;
 				    nl_pcmd.position.z = 1.0;
 				    cmd_pub.publish(nl_pcmd);
 				

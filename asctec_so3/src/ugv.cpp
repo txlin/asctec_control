@@ -19,13 +19,14 @@
 #include <string.h>
 
 #define freq 10
-#define maxV 0.2
+#define maxV 0.4
+
 #define XBOUND_H 1.0
 #define XBOUND_L -1.0
 #define YBOUND_H 1.5
 #define YBOUND_L -1.5
-#define BORDER_NUMB 5
-#define BORDER_TOP 1.0
+#define BORDER_NUMB 2
+#define BORDER_TOP 0.5
 
 using namespace std;
 
@@ -36,18 +37,22 @@ bool isDone = true;
 
 float robot_x, robot_y, robot_yaw;
 string world, ugv, topic, quad_frame;
-nav_msgs::Odometry odom_quad_;
-geometry_msgs::TransformStamped odom_ugv_;
+nav_msgs::Odometry odom_quad_, odom_ugv_;
 
-ros::Publisher traj_pub, border_pub, pos_pub, start_pub;
-ros::Subscriber traj_sub, joy_sub, state_sub;
+ros::Publisher wpt_pub, border_pub, pos_pub;
+ros::Subscriber status_sub, joy_sub, quad_sub, ugv_sub;
 
-void stateCallback(const pc_asctec_sim::pc_state::ConstPtr& msg)
+void quadCallback(const nav_msgs::Odometry::ConstPtr& msg)
 {
-	quad_state = *msg;
+	odom_quad_ = *msg;
 }
 
-void trajCallback(const std_msgs::Bool::ConstPtr& msg)
+void ugvCallback(const nav_msgs::Odometry::ConstPtr& msg)
+{
+	odom_ugv_ = *msg;
+}
+
+void statusCallback(const std_msgs::Bool::ConstPtr& msg)
 {
 	isDone = msg->data;
 }
@@ -80,10 +85,10 @@ void showBorder(bool outOf, float z)
 	border.type = visualization_msgs::Marker::LINE_LIST;
 
 	if(outOf) {
-		border.color.a = 1.0;
+		border.color.a = 0.6;
 		border.color.r = 1.0;	
 	}else {
-		border.color.a = 1.0;
+		border.color.a = 0.6;
 		border.color.g = 1.0;	
 	}
 			
@@ -91,45 +96,45 @@ void showBorder(bool outOf, float z)
 	border.scale.y = 1.0;
 	border.scale.z = 0.5;
 
-		corner.x = XBOUND_L;
-		corner.y = YBOUND_L;	
-		corner.z = 0;
-		border.points.push_back(corner);
+	corner.x = XBOUND_L;
+	corner.y = YBOUND_L;	
+	corner.z = 0;
+	border.points.push_back(corner);
 
-		corner.x = XBOUND_L;
-		corner.y = YBOUND_L;	
-		corner.z = z;
-		border.points.push_back(corner);
+	corner.x = XBOUND_L;
+	corner.y = YBOUND_L;	
+	corner.z = z;
+	border.points.push_back(corner);
 
-		corner.x = XBOUND_L;
-		corner.y = YBOUND_H;	
-		corner.z = 0;
-		border.points.push_back(corner);
+	corner.x = XBOUND_L;
+	corner.y = YBOUND_H;	
+	corner.z = 0;
+	border.points.push_back(corner);
 
-		corner.x = XBOUND_L;
-		corner.y = YBOUND_H;	
-		corner.z = z;
-		border.points.push_back(corner);
+	corner.x = XBOUND_L;
+	corner.y = YBOUND_H;	
+	corner.z = z;
+	border.points.push_back(corner);
 
-		corner.x = XBOUND_H;
-		corner.y = YBOUND_H;	
-		corner.z = 0;
-		border.points.push_back(corner);
+	corner.x = XBOUND_H;
+	corner.y = YBOUND_H;	
+	corner.z = 0;
+	border.points.push_back(corner);
 
-		corner.x = XBOUND_H;
-		corner.y = YBOUND_H;	
-		corner.z = z;
-		border.points.push_back(corner);
+	corner.x = XBOUND_H;
+	corner.y = YBOUND_H;	
+	corner.z = z;
+	border.points.push_back(corner);
 
-		corner.x = XBOUND_H;
-		corner.y = YBOUND_L;	
-		corner.z = 0;
-		border.points.push_back(corner);
+	corner.x = XBOUND_H;
+	corner.y = YBOUND_L;	
+	corner.z = 0;
+	border.points.push_back(corner);
 
-		corner.x = XBOUND_H;
-		corner.y = YBOUND_L;	
-		corner.z = z;
-		border.points.push_back(corner);
+	corner.x = XBOUND_H;
+	corner.y = YBOUND_L;	
+	corner.z = z;
+	border.points.push_back(corner);
 
 	for(int i=0; i<=BORDER_NUMB; i++) {
 		corner.x = XBOUND_L;
@@ -175,49 +180,47 @@ void showBorder(bool outOf, float z)
 	border_pub.publish(border);
 }
 
-void sendTrajectory(float time, float wait, float x, float y, float z, float yaw) 
+void sendTrajectory(float time, float x, float y, float z, float yaw) 
 {
-	pc_asctec_sim::pc_traj_cmd cmd;
-	cmd.x[0] = x;
-	cmd.y[0] = y;
-	cmd.z[0] = z;
+	asctec_msgs::MinAccelCmd cmd;
+	cmd.position.x = x;
+	cmd.position.y = y;
+	cmd.position.z = z;
 	cmd.yaw[0] = yaw;
-	cmd.wait_time[0] = wait;
-	cmd.duration[0] = time;
+	cmd.time = time;
 
-	cmd.points = 1;
-	traj_pub.publish(cmd);
+	wpt_pub.publish(cmd);
+	isDone = false;
 }
 
-void sendPoint(float x, float y, float z, float yaw)
+void sendPoint(float x, float y, float vx, float vy, float z, float yaw)
 {
-	pc_asctec_sim::pc_goal_cmd next;
-	next.x = x;
-	next.y = y;
-	next.z = z;
-	next.yaw = yaw;
+	asctec_msgs::PositionCmd next;
+	next.position.x = x;
+	next.position.y = y;
+	next.velocity.x = vx;
+	next.velocity.y = vy;
+	next.position.z = z;
+	next.yaw[0] = yaw;
 	pos_pub.publish(next);
 }
 
 void sendLandTrajectory(float time) 
 {
-	pc_asctec_sim::pc_traj_cmd cmd;
-	cmd.x[0] = 0.0;
-	cmd.y[0] = 0.0;
-	cmd.z[0] = 1.0;
-	cmd.yaw[0] = 0.0;
-	cmd.wait_time[0] = 0.5;
-	cmd.duration[0] = time;
+	asctec_msgs::MinAccelCmd cmd;
+	cmd.position.x = 0.0;
+	cmd.position.y = 0.0;
+	cmd.position.z = 1.0;
+	cmd.time = time;
+	wpt_pub.publish(cmd);
 
-	cmd.x[1] = 0.0;
-	cmd.y[1] = 0.0;
-	cmd.z[1] = 0.0;
-	cmd.yaw[1] = 0.0;
-	cmd.wait_time[1] = 0.0;
-	cmd.duration[1] = 3;
+	cmd.position.x = 0.0;
+	cmd.position.y = 0.0;
+	cmd.position.z = 0.0;
+	cmd.time = 3;
+	wpt_pub.publish(cmd);
 
-	cmd.points = 2;
-	traj_pub.publish(cmd);
+	isDone = false;
 }
 
 float limit(float value, float upper, float lower)
@@ -236,7 +239,24 @@ float limit(float value, float upper, float lower)
 bool outBorder(void)
 {
 	bool temp = false;
-	if(quad_state.x > XBOUND_H || quad_state.x < XBOUND_L || quad_state.y > YBOUND_H || quad_state.y < YBOUND_L) {
+	if(odom_quad_.pose.pose.position.x > XBOUND_H || odom_quad_.pose.pose.position.x < XBOUND_L || odom_quad_.pose.pose.position.y > YBOUND_H || odom_quad_.pose.pose.position.y < YBOUND_L) {
+		temp = true;
+	}
+	return temp;
+}
+
+bool outUGVBorderX(void)
+{
+	bool temp = false;
+	if(odom_ugv_.pose.pose.position.x > XBOUND_H || odom_ugv_.pose.pose.position.x < XBOUND_L) {
+		temp = true;
+	}
+	return temp;
+}
+bool outUGVBorderY(void)
+{
+	bool temp = false;
+	if(odom_ugv_.pose.pose.position.y > YBOUND_H || odom_ugv_.pose.pose.position.y < YBOUND_L) {
 		temp = true;
 	}
 	return temp;
@@ -247,44 +267,30 @@ int main(int argc, char** argv) {
 	ros::init(argc, argv, "UGV Tracker");
 	ros::NodeHandle nh;
 	ros::Rate loop_rate = freq;
-   
-	tf::StampedTransform transform;
-	tf::TransformListener listener;
 	
 	ros::param::get("~topic", topic);
 	ros::param::get("~w_frame", world);
-	ros::param::get("~q_frame", quad);
-	ros::param::get("~ugv_frame", ugv);
+	ros::param::get("~ugv_odom", ugv);
 
 	wpt_pub = nh.advertise<asctec_msgs::MinAccelCmd>(topic + "/waypoints", 10);
-	pos_pub = nh.advertise<asctec_msgs::PositionCmd>(topic + "/pos_goals", 10);
-	border_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/border", 10);
+	pos_pub = nh.advertise<asctec_msgs::PositionCmd>(topic + "/position_cmd", 10);
+	border_pub = nh.advertise<visualization_msgs::Marker>(topic + "/border", 10);
 
-	status_sub = nh.subscribe(topic + "/status", 10, trajCallback);
+	status_sub = nh.subscribe(topic + "/status", 10, statusCallback);
 	joy_sub = nh.subscribe("/joy", 10, joyCallback);
-	quad_sub = nh.subscribe(topic + "/state", 10, stateCallback);
-	ugv_sub = nh.subscribe(ugv,10,ugvCallback);
-
-	listener.waitForTransform(world, ugv, ros::Time(0), ros::Duration(3.0));
+	quad_sub = nh.subscribe(topic + "/odom", 10, quadCallback);
+	ugv_sub = nh.subscribe(ugv, 10, ugvCallback);
 
 	ROS_INFO("Running: UGV Tracker");
 
 	while(ros::ok()) {
 		ros::spinOnce();
-		listener.lookupTransform(world, ugv, ros::Time(0), transform);
-		robot_x = transform.getOrigin().x();
-		robot_y = transform.getOrigin().y();
-		robot_yaw = tf::getYaw(transform.getRotation());
-
 		showBorder(outBorder(), BORDER_TOP);
 
 		switch(state) {
 			case 0:
 				//Check exit conditions
 				if(flying && isDone) {
-					std_msgs::Bool start;
-					start.data = true;
-					start_pub.publish(start);
 					state = 1;			
 				}
 				break;
@@ -292,10 +298,9 @@ int main(int argc, char** argv) {
 			case 1:
 				//Check exit conditions
 				if(isDone) {
-					float tTravel = sqrt(pow(quad_state.x,2) + pow(quad_state.y,2) + pow((1 - quad_state.z),2)) / maxV;
+					float tTravel = sqrt(pow(odom_quad_.pose.pose.position.x,2) + pow(odom_quad_.pose.pose.position.y,2) + pow((1 - odom_quad_.pose.pose.position.z),2)) / maxV;
 					tTravel = limit(tTravel, 10, 1);
-					sendTrajectory(tTravel, 2.0, 0.0, 0.0, 1.0, 0.0);
-					isDone = false;
+					sendTrajectory(tTravel, 0.0, 0.0, 1.0, 0.0);
 
 					ROS_INFO("Taking off to 0.0, 0.0, 1.0, time of travel: %f", tTravel);
 					state = 2;
@@ -305,27 +310,22 @@ int main(int argc, char** argv) {
 			case 2:
 				//Check exit conditions
 				if(isDone && !flying) {
-					float tTravel = sqrt(pow(quad_state.x,2) + pow(quad_state.y,2) + pow(quad_state.z,2)) / maxV;
+					float tTravel = sqrt(pow(odom_quad_.pose.pose.position.x,2) + pow(odom_quad_.pose.pose.position.y,2) + pow(odom_quad_.pose.pose.position.z,2)) / maxV;
 					tTravel = limit(tTravel, 10, 1);
 					sendLandTrajectory(tTravel);
-					isDone = false;
 
 					ROS_INFO("Landing at 0.0, 0.0, 0.0, time of travel: %f", tTravel);
 					state = 0;
 
 				}else if(tracking && isDone) {
-					float xNew = robot_x;
-					float yNew = robot_y;
-					float yawNew = robot_yaw;
-					xNew = limit(xNew, XBOUND_H, XBOUND_L);
-					yNew = limit(yNew, YBOUND_H, YBOUND_L);
-					yawNew = limit(yawNew, M_PI, -M_PI);
+					float xNew = limit(odom_ugv_.pose.pose.position.x, XBOUND_H, XBOUND_L);
+					float yNew = limit(odom_ugv_.pose.pose.position.y, YBOUND_H, YBOUND_L);
+					float yawNew = limit(odom_ugv_.pose.pose.orientation.z, M_PI, -M_PI);
 
-					float tTravel = sqrt(pow((xNew - quad_state.x),2) + pow((yNew - quad_state.y),2)) / maxV;
+					float tTravel = sqrt(pow((xNew - odom_quad_.pose.pose.position.x),2) + pow((yNew - odom_quad_.pose.pose.position.y),2)) / maxV;
 	
 					tTravel = limit(tTravel, 10, 1);
-					sendTrajectory(tTravel, 0.0, xNew, yNew, 1.0, 0.0);		//Yaw controller needs to be tuned!!
-					isDone = false;
+					sendTrajectory(tTravel, xNew, yNew, 1.0, 0.0);		//Yaw controller needs to be tuned!!
 
 					ROS_INFO("Begin tracking of UGV");
 					state = 3;
@@ -334,13 +334,18 @@ int main(int argc, char** argv) {
 
 			case 3:
 				if(isDone) {
-					float xNew = robot_x;
-					float yNew = robot_y;
-					float yawNew = robot_yaw;
-					xNew = limit(xNew, XBOUND_H, XBOUND_L);
-					yNew = limit(yNew, YBOUND_H, YBOUND_L);
-					yawNew = limit(yawNew, M_PI, -M_PI);
-					sendPoint(xNew, yNew, 1.0, 0.0);		//Yaw controller needs to be tuned!!
+					float xNew = limit(odom_ugv_.pose.pose.position.x, XBOUND_H, XBOUND_L);
+					float yNew = limit(odom_ugv_.pose.pose.position.y, YBOUND_H, YBOUND_L);
+					float vxNew = 0.0;
+					float vyNew = 0.0;
+					if(!outUGVBorderX()) {
+						vxNew = odom_ugv_.twist.twist.linear.x;
+					}
+					if(!outUGVBorderY()) {
+						vyNew = odom_ugv_.twist.twist.linear.y;
+					}
+					float yawNew = limit(odom_ugv_.pose.pose.orientation.z, M_PI, -M_PI);
+					sendPoint(xNew, yNew, vxNew, vyNew, 1.0, 0.0);										//Yaw controller needs to be tuned!!
 				}
 
 				//Check exit conditions

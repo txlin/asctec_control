@@ -22,10 +22,10 @@
     name="$(arg controller)"
     required="true"
     output="screen">
-    <param name="mass" value="0.55"/>
+    <param name="mass" value="0.52"/>
     <rosparam param="gains/pos">[3, 3, 6]</rosparam>
     <rosparam param="gains/vel">[3, 3, 3]</rosparam>
-
+		<rosparam param="gains/yaw">0.5</rosparam>
   </node>
 
   <node pkg="trajectory_gen"

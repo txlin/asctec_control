@@ -9,23 +9,23 @@
 	
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
   
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find asctec_viz)/rviz/$(arg rviz)" />
+	<!-- node name="rviz" pkg="rviz" type="rviz" args="-d $(find asctec_viz)/rviz/$(arg rviz)" />
 	<node pkg="asctec_viz"
 		type="asctec_viz_node"
 		name="asctec_viz"
 		output="screen">
 		<param name="topic_name" value="$(arg controller)"/>
-	</node>
+	</node -->
 
   <node pkg="asctec_so3"
     type="asctec_control_node"
     name="$(arg controller)"
     required="true"
     output="screen">
-    <param name="mass" value="0.55"/>
+    <param name="mass" value="0.52"/>
     <rosparam param="gains/pos">[3, 3, 6]</rosparam>
     <rosparam param="gains/vel">[3, 3, 3]</rosparam>
-
+		<rosparam param="gains/yaw">0.5</rosparam>
   </node>
 
   <node pkg="trajectory_gen"
@@ -55,17 +55,6 @@
     <param name="q_name" value="$(arg controller)"/>
     <param name="q_frame" value="$(arg q_frame)"/>
     <param name="w_frame" value="$(arg w_frame)"/>
-  </node>
-
-  <node pkg="mesh_visualization"
-    type="mesh_visualization"
-    name="iris_mesh_visualization"
-    output="screen">
-    <param name="mesh_resource" value="package://mesh_visualization/meshes/IRIS.STL"/>
-    <remap from="~odom_raw" to="iris_odom_raw"/>
-    <remap from="~target" to="iris_target"/>
-    <remap from="~robot" to="iris_robot"/>
-    <remap from="Body" to="iris_body"/>
   </node>
 
 	<node pkg="asctec_so3"

@@ -132,6 +132,7 @@ asctec_msgs::PositionCmd* MinAccel::getNextCommand(void) {
   	double t = ros::Time::now().toSec() - t0.toSec();
     if(t >= T.front()) {
       t0 = ros::Time::now();
+			t = 0.0;
 			delete Xx.front();
 			delete Xy.front();
 			delete Xz.front();
@@ -142,11 +143,10 @@ asctec_msgs::PositionCmd* MinAccel::getNextCommand(void) {
       Xy.erase(Xy.begin());
       Xz.erase(Xz.begin());
       Xyaw.erase(Xyaw.begin());
-
     }
     if(T.size() != 0) {
       asctec_msgs::PositionCmd cmd;
-
+			cmd.header.stamp = ros::Time::now();
       for(int i=5; i>=0; i--) {
         cmd.position.x += Xx.front()->operator()(5-i,0)*pow(t,i);
         cmd.velocity.x += i*Xx.front()->operator()(5-i,0)*pow(t,i-1);
@@ -165,6 +165,7 @@ asctec_msgs::PositionCmd* MinAccel::getNextCommand(void) {
         cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(5-i,0)*pow(t,i-2);
 
       }
+			cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
       cmd_ = cmd;
     }
   }
