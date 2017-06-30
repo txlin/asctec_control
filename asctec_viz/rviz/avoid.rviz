@@ -4,9 +4,9 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /TF1
-      Splitter Ratio: 0.502778
-    Tree Height: 358
+        - /TF1/Frames1
+      Splitter Ratio: 0.383333
+    Tree Height: 774
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -45,60 +45,40 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /asctec_so3_control/asctec_viz
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
     - Class: rviz/TF
       Enabled: true
       Frame Timeout: 15
       Frames:
         All Enabled: false
         odom:
-          Value: false
-        vicon/hri_wand/hri_wand:
           Value: true
-        vicon/hummingbird_2/hummingbird_2:
+        vicon/hummingbird_1/hummingbird_1:
           Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: false
       Show Axes: true
-      Show Names: false
+      Show Names: true
       Tree:
         odom:
-          vicon/hri_wand/hri_wand:
-            {}
-          vicon/hummingbird_2/hummingbird_2:
+          vicon/hummingbird_1/hummingbird_1:
             {}
       Update Interval: 0
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /asctec_so3_control/trajectory_viz
+      Marker Topic: /asctec_so3_control/obstacles
       Name: Marker
       Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /asctec_so3_control/waypoint_viz
-      Name: Marker
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /asctec_so3_control/border
-      Name: Marker
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /asctec_so3_control/soft_border
-      Name: Marker
-      Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -124,7 +104,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: -1.57
+      Angle: -0.01
       Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
@@ -133,11 +113,11 @@ Visualization Manager:
         Value: false
       Name: Current View
       Near Clip Distance: 0.01
-      Scale: 172.065
+      Scale: 121.222
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz)
-      X: 0
-      Y: 0
+      X: -1.83047
+      Y: 1.67259
     Saved: ~
 Window Geometry:
   Displays:

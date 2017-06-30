@@ -1,9 +1,9 @@
 <launch>
 
   <arg name="port" value="/dev/ttyUSB0" />
-  <arg name="q_name" value="hummingbird_2" />
+  <arg name="q_name" value="hummingbird_1" />
   <arg name="controller" value="asctec_so3_control" />
-  <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
+  <arg name="q_frame" value="/vicon/hummingbird_1/hummingbird_1" />
   <arg name="w_frame" value="/odom" />
 	<arg name="rviz" value="basic.rviz"/>
 	
@@ -22,9 +22,9 @@
     name="$(arg controller)"
     required="true"
     output="screen">
-    <param name="mass" value="0.52"/>
-    <rosparam param="gains/pos">[3, 3, 5.5]</rosparam>
-    <rosparam param="gains/vel">[3, 3, 4]</rosparam>
+    <param name="mass" value="0.55"/>
+    <rosparam param="gains/pos">[3, 3, 8.2]</rosparam>
+    <rosparam param="gains/vel">[3, 3, 4.5]</rosparam>
 		<rosparam param="gains/yaw">0.8</rosparam>
   </node>
 
@@ -58,10 +58,10 @@
   </node>
 
 	<node pkg="asctec_so3"
-		type="speed_test_node"
-		name="speedy"
+		type="square_node"
+		name="suareqy"
 		output="screen">
-		<param name="topic_name" value="$(arg controller)"/>
+		<param name="topic" value="$(arg controller)"/>
 	</node>
 
 </launch>

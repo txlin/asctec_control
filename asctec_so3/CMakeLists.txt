@@ -72,11 +72,11 @@ find_package(Eigen REQUIRED)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  geometry_msgs
-  std_msgs
-)
+##generate_messages(
+##  DEPENDENCIES
+##  geometry_msgs
+##  std_msgs
+##)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -147,6 +147,7 @@ add_executable(ugv_vicon_node src/ugv_vicon_odom.cpp)
 add_executable(speed_test_node src/speed_test.cpp)
 add_executable(nl_wand_node src/wand_demo.cpp)
 add_executable(nl_track_node src/ugv.cpp)
+add_executable(square_node src/square.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -162,6 +163,7 @@ add_dependencies(ugv_vicon_node so3_control_generate_messages_cpp)
 add_dependencies(speed_test_node so3_control_generate_messages_cpp)
 add_dependencies(nl_wand_node so3_control_generate_messages_cpp)
 add_dependencies(nl_track_node so3_control_generate_messages_cpp)
+add_dependencies(square_node so3_control_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(asctec_control_node
@@ -181,6 +183,9 @@ target_link_libraries(nl_wand_node
   ${catkin_LIBRARIES}
 )
 target_link_libraries(nl_track_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(square_node
   ${catkin_LIBRARIES}
 )
 

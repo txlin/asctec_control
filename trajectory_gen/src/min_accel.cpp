@@ -114,17 +114,18 @@ bool MinAccel::getStatus(void) {
 }
 
 void MinAccel::resetWaypoints(void) {
-	if(T.size() == 0){ ROS_INFO("Waypoint List Empty"); return;}
-	delete Xx.front();
-	delete Xy.front();
-	delete Xz.front();
-	delete Xyaw.front();
+	if(T.size() == 0) return;
 
-  T.erase(T.begin());
-  Xx.erase(Xx.begin());
-  Xy.erase(Xy.begin());
-  Xz.erase(Xz.begin());
-  Xyaw.erase(Xyaw.begin());
+	for (std::vector<MatrixXf *>::iterator i = Xx.begin() ; i != Xx.end(); ++i) delete (*i);
+	for (std::vector<MatrixXf *>::iterator i = Xy.begin() ; i != Xx.end(); ++i) delete (*i);
+	for (std::vector<MatrixXf *>::iterator i = Xz.begin() ; i != Xx.end(); ++i) delete (*i);
+	for (std::vector<MatrixXf *>::iterator i = Xyaw.begin() ; i != Xx.end(); ++i) delete (*i);
+
+  Xx.clear();
+  Xy.clear();
+  Xz.clear();
+  Xyaw.clear();
+  T.clear();
 }
 
 asctec_msgs::PositionCmd* MinAccel::getNextCommand(void) {  		

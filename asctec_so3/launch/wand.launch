@@ -1,21 +1,21 @@
 <launch>
 
   <arg name="port" value="/dev/ttyUSB0" />
-  <arg name="q_name" value="hummingbird_1" />
+  <arg name="q_name" value="hummingbird_2" />
   <arg name="controller" value="asctec_so3_control" />
-  <arg name="q_frame" value="/vicon/hummingbird_1/hummingbird_1" />
+  <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
   <arg name="w_frame" value="/odom" />
 	<arg name="rviz" value="wand.rviz"/>
 	
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
   
-	<!-- node name="rviz" pkg="rviz" type="rviz" args="-d $(find asctec_viz)/rviz/$(arg rviz)" />
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find asctec_viz)/rviz/$(arg rviz)" />
 	<node pkg="asctec_viz"
 		type="asctec_viz_node"
 		name="asctec_viz"
 		output="screen">
 		<param name="topic_name" value="$(arg controller)"/>
-	</node -->
+	</node>
 
   <node pkg="asctec_so3"
     type="asctec_control_node"
@@ -24,8 +24,8 @@
     output="screen">
     <param name="mass" value="0.52"/>
     <rosparam param="gains/pos">[3, 3, 6]</rosparam>
-    <rosparam param="gains/vel">[3, 3, 3]</rosparam>
-		<rosparam param="gains/yaw">0.5</rosparam>
+    <rosparam param="gains/vel">[3, 3, 5]</rosparam>
+		<rosparam param="gains/yaw">0.8</rosparam>
   </node>
 
   <node pkg="trajectory_gen"
@@ -62,7 +62,7 @@
 		name="wandy"
 		output="screen">
 		<param name="q_name" value="$(arg controller)"/>
-    <param name="wand_frame" value="/vicon/foam_wand/foam_wand"/>
+    <param name="wand_frame" value="/vicon/hri_wand/hri_wand"/>
     <param name="w_frame" value="$(arg w_frame)"/>
 		<param name="topic_name" value="$(arg controller)"/>
 	</node>

@@ -19,7 +19,8 @@
 #include <string.h>
 
 #define freq 40
-#define maxV 0.2
+#define maxV 0.5
+#define maxA 1.0	//		m/s^2
 
 #define XBOUND_H 1.0
 #define XBOUND_L -1.0
@@ -31,15 +32,11 @@
 #define sYBOUND_H 0.75 * YBOUND_H
 #define sYBOUND_L 0.75 * YBOUND_L
 
-#define BORDER_NUMB 2
-#define BORDER_TOP 0.8
+#define BORDER_NUMB 1
+#define BORDER_TOP 0.5
 
 #define k_ang 0.9
 #define ANG_LIMIT M_PI/8
-
-#define kp 
-#define kd
-#define mg 0.25
 
 int state = 0;
 bool isDone = true;
@@ -116,11 +113,11 @@ void showSBorder(bool outOf, float z)
 	border.type = visualization_msgs::Marker::LINE_LIST;
 
 	if(outOf) {
-		border.color.a = 1.0;
+		border.color.a = 0.7;
 		border.color.r = 1.0;	
 		border.color.g = 1.0;
 	}else {
-		border.color.a = 1.0;
+		border.color.a = 0.7;
 		border.color.g = 1.0;	
 	}
 			
@@ -228,10 +225,10 @@ void showBorder(bool outOf, float z)
 	border.type = visualization_msgs::Marker::LINE_LIST;
 
 	if(outOf) {
-		border.color.a = 1.0;
+		border.color.a = 0.7;
 		border.color.r = 1.0;	
 	}else {
-		border.color.a = 1.0;
+		border.color.a = 0.7;
 		border.color.g = 1.0;	
 	}
 			
@@ -326,14 +323,15 @@ void showBorder(bool outOf, float z)
 
 void sendTrajectory(float x, float y, float z) 
 {
-	float tTravel = sqrt(pow(x-odom_.pose.pose.position.x,2) + pow(y-odom_.pose.pose.position.y,2) + pow((z-odom_.pose.pose.position.z),2)) / maxV;
-	tTravel = limit(tTravel, 10, 1);
-
 	asctec_msgs::MinAccelCmd cmd;
 	cmd.position.x = x;
 	cmd.position.y = y;
 	cmd.position.z = z;
-	cmd.time = tTravel;
+
+	float tx = odom_.twist.twist.linear.x/maxA;
+	float ty = odom_.twist.twist.linear.y/maxA;
+	cmd.time = sqrt(pow(tx,2)+pow(ty,2));
+	cmd.time += sqrt(pow(x-odom_.pose.pose.position.x,2) + pow(y-odom_.pose.pose.position.y,2) + pow((z-odom_.pose.pose.position.z),2)) / maxV;
 
 	wpt_pub.publish(cmd);
 	isDone = false;
@@ -342,44 +340,51 @@ void sendTrajectory(float x, float y, float z)
 void sendBorderTrajectory()
 {
 	asctec_msgs::MinAccelCmd cmd;
-	cmd.reset = true;
-	cmd.position.x = odom_.pose.pose.position.x;
-	cmd.position.y = odom_.pose.pose.position.y;
+	cmd.position.x = std::min(odom_.pose.pose.position.x, sXBOUND_H);
+	cmd.position.x = std::max(cmd.position.x, sXBOUND_L);
+	cmd.position.y = std::min(odom_.pose.pose.position.y, sYBOUND_H);
+	cmd.position.y = std::max(cmd.position.y, sYBOUND_L);
+	if((sXBOUND_H-odom_.pose.pose.position.x) < 0) {
+		cmd.velocity.x = -maxV;
+
+	}else if((sXBOUND_L-odom_.pose.pose.position.x) > 0) { 
+		cmd.velocity.x = maxV;
+	}
+	if((sYBOUND_H-odom_.pose.pose.position.y) < 0) {
+		cmd.velocity.y = -maxV;
+
+	}else if((sYBOUND_L-odom_.pose.pose.position.y) > 0) { 
+		cmd.velocity.y = maxV;
+	}
 	cmd.position.z = 1.0;
-	cmd.time = 1.0;
 
-	if(odom_.pose.pose.position.x > XBOUND_H) {
-		cmd.position.x = sXBOUND_H;
+	float tx = odom_.twist.twist.linear.x/maxA;
+	float ty = odom_.twist.twist.linear.y/maxA;
+	cmd.time = sqrt(pow(tx,2)+pow(ty,2));
+	cmd.time += sqrt(pow(cmd.position.x-odom_.pose.pose.position.x,2)+pow(cmd.position.y-odom_.pose.pose.position.y,2))/maxV;
+	cmd.reset = true;
 
-	}else if(odom_.pose.pose.position.x < XBOUND_L) {
-		cmd.position.x = sXBOUND_L;
-	}
-
-	if(odom_.pose.pose.position.y > YBOUND_H) {
-		cmd.position.y = sYBOUND_H;
-
-	}else if(odom_.pose.pose.position.y < YBOUND_L) {
-		cmd.position.y = sYBOUND_L;
-	}
 	wpt_pub.publish(cmd);
 	isDone = false;
 }
 
 void sendLandTrajectory() 
 {
-	float tTravel = sqrt(pow(odom_.pose.pose.position.x,2) + pow(odom_.pose.pose.position.y,2) + pow((1 - odom_.pose.pose.position.z),2)) / maxV;
-	tTravel = limit(tTravel, 10, 1);
-
 	asctec_msgs::MinAccelCmd cmd;
+	cmd.reset = true;
 	cmd.position.x = 0.0;
 	cmd.position.y = 0.0;
 	cmd.position.z = 1.0;
-	cmd.time = tTravel;
+	float tx = odom_.twist.twist.linear.x/maxA;
+	float ty = odom_.twist.twist.linear.y/maxA;
+	cmd.time = sqrt(pow(tx,2)+pow(ty,2));
+	cmd.time += sqrt(pow(odom_.pose.pose.position.x,2) + pow(odom_.pose.pose.position.y,2) + pow((1-odom_.pose.pose.position.z),2)) / maxV;
 	wpt_pub.publish(cmd);
 
 	cmd.position.x = 0.0;
 	cmd.position.y = 0.0;
 	cmd.position.z = 0.0;
+	cmd.reset = false;
 	cmd.time = 3;
 	wpt_pub.publish(cmd);
 
@@ -388,18 +393,12 @@ void sendLandTrajectory()
 
 bool outBorder(void)
 {
-	if(odom_.pose.pose.position.x > XBOUND_H || odom_.pose.pose.position.x < XBOUND_L || odom_.pose.pose.position.y > YBOUND_H || odom_.pose.pose.position.y < YBOUND_L) {
-		return true;
-	}
-	return false;
+	return odom_.pose.pose.position.x > XBOUND_H || odom_.pose.pose.position.x < XBOUND_L || odom_.pose.pose.position.y > YBOUND_H || odom_.pose.pose.position.y < YBOUND_L;
 }
 
 bool outSBorder(void)
 {
-	if(odom_.pose.pose.position.x > sXBOUND_H || odom_.pose.pose.position.x < sXBOUND_L || odom_.pose.pose.position.y > sYBOUND_H || odom_.pose.pose.position.y < sYBOUND_L) {
-		return true;
-	}
-	return false;
+	return odom_.pose.pose.position.x > sXBOUND_H || odom_.pose.pose.position.x < sXBOUND_L || odom_.pose.pose.position.y > sYBOUND_H || odom_.pose.pose.position.y < sYBOUND_L;
 }
 
 asctec_msgs::SICmd * setHRIBehavior(tf::StampedTransform * transform)
@@ -418,18 +417,12 @@ asctec_msgs::SICmd * setHRIBehavior(tf::StampedTransform * transform)
 
 bool isWandDown(tf::StampedTransform * transform)
 {
-	if(transform->getOrigin().z() < 0.2) {
-		return true;
-	}
-	return false;
+	return transform->getOrigin().z() < 0.3;
 }
 
 bool isWandUp(tf::StampedTransform * transform)
 {
-	if(transform->getOrigin().z() > 1.5) {
-		return true;
-	}
-	return false;
+	return transform->getOrigin().z() > 1.5;
 }
 
 int main(int argc, char** argv) {
@@ -493,8 +486,8 @@ int main(int argc, char** argv) {
 				    asctec_msgs::PositionCmd nl_pcmd;
 				    nl_pcmd.position.x = odom_.pose.pose.position.x;
 				    nl_pcmd.position.y = odom_.pose.pose.position.y;
-				    nl_pcmd.velocity.x = odom_.twist.twist.linear.x;
-				    nl_pcmd.velocity.y = odom_.twist.twist.linear.y;
+//				    nl_pcmd.velocity.x = odom_.twist.twist.linear.x;
+//				    nl_pcmd.velocity.y = odom_.twist.twist.linear.y;
 				    nl_pcmd.position.z = 1.0;
 				    cmd_pub.publish(nl_pcmd);
 				
@@ -503,9 +496,8 @@ int main(int argc, char** argv) {
 					    ROS_INFO("Landing...");
 					    sendLandTrajectory();
 					    state = 0;
-				    }
 
-				    if(outBorder()) {
+				    }else if(outBorder()) {
 					    ROS_INFO("Border breached!");
 					    sendBorderTrajectory();
 				    }	

@@ -1,9 +1,9 @@
 <launch>
 
   <arg name="port" value="/dev/ttyUSB0" />
-  <arg name="q_name" value="hummingbird_1" />
+  <arg name="q_name" value="hummingbird_2" />
   <arg name="controller" value="asctec_so3_control" />
-  <arg name="q_frame" value="/vicon/hummingbird_1/hummingbird_1" />
+  <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
   <arg name="w_frame" value="/odom" />
 	<arg name="rviz" value="track.rviz"/>
 	

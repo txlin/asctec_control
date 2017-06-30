@@ -21,7 +21,7 @@ void statusCallback(const std_msgs::Bool::ConstPtr& msg)
 
 void timerCallback(const ros::TimerEvent& event) 
 {
-	//waypoints.publish(waypoint);
+	waypoints.publish(waypoint);
 	timer.stop();
 	timing = false;
 }
