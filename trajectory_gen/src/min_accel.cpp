@@ -115,11 +115,12 @@ bool MinAccel::getStatus(void) {
 
 void MinAccel::resetWaypoints(void) {
 	if(T.size() == 0) return;
+	ROS_INFO("Clearing %i waypoints...", int(T.size()));
 
-	for (std::vector<MatrixXf *>::iterator i = Xx.begin() ; i != Xx.end(); ++i) delete (*i);
-	for (std::vector<MatrixXf *>::iterator i = Xy.begin() ; i != Xx.end(); ++i) delete (*i);
-	for (std::vector<MatrixXf *>::iterator i = Xz.begin() ; i != Xx.end(); ++i) delete (*i);
-	for (std::vector<MatrixXf *>::iterator i = Xyaw.begin() ; i != Xx.end(); ++i) delete (*i);
+	for (std::vector<MatrixXf *>::iterator i = Xx.begin() ; i != Xx.end(); ++i) delete *i;
+	for (std::vector<MatrixXf *>::iterator i = Xy.begin() ; i != Xy.end(); ++i) delete *i;
+	for (std::vector<MatrixXf *>::iterator i = Xz.begin() ; i != Xz.end(); ++i) delete *i;
+	for (std::vector<MatrixXf *>::iterator i = Xyaw.begin() ; i != Xyaw.end(); ++i) delete *i;
 
   Xx.clear();
   Xy.clear();

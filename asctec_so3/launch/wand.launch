@@ -6,7 +6,8 @@
   <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
   <arg name="w_frame" value="/odom" />
 	<arg name="rviz" value="wand.rviz"/>
-	
+	<arg name="mesh" value="package://mesh_visualization/meshes/hummingbird.mesh"/>
+
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
   
 	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find asctec_viz)/rviz/$(arg rviz)" />
@@ -22,9 +23,9 @@
     name="$(arg controller)"
     required="true"
     output="screen">
-    <param name="mass" value="0.52"/>
-    <rosparam param="gains/pos">[3, 3, 6]</rosparam>
-    <rosparam param="gains/vel">[3, 3, 5]</rosparam>
+    <param name="mass" value="0.55"/>
+    <rosparam param="gains/pos">[3, 3, 8.2]</rosparam>
+    <rosparam param="gains/vel">[3, 3, 4.5]</rosparam>
 		<rosparam param="gains/yaw">0.8</rosparam>
   </node>
 
@@ -67,4 +68,11 @@
 		<param name="topic_name" value="$(arg controller)"/>
 	</node>
 
+	<node pkg="asctec_viz"
+		type="hummingbird_viz_node"
+		name="hummingbird_viz"
+		output="screen">
+		<param name="topic_name" value="$(arg controller)"/>
+		<param name="mesh_resource" value="$(arg mesh)"/>
+	</node>
 </launch>

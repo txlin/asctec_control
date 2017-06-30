@@ -6,6 +6,7 @@
   <arg name="q_frame" value="/vicon/hummingbird_1/hummingbird_1" />
   <arg name="w_frame" value="/odom" />
 	<arg name="rviz" value="basic.rviz"/>
+	<arg name="mesh" value="package://mesh_visualization/meshes/hummingbird.mesh"/>
 	
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
   
@@ -64,4 +65,11 @@
 		<param name="topic" value="$(arg controller)"/>
 	</node>
 
+	<node pkg="asctec_viz"
+		type="hummingbird_viz_node"
+		name="hummingbird_viz"
+		output="screen">
+		<param name="topic_name" value="$(arg controller)"/>
+		<param name="mesh_resource" value="$(arg mesh)"/>
+	</node>
 </launch>

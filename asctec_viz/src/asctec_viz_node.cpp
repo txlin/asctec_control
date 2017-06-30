@@ -12,8 +12,8 @@
 int idw = 0;
 int idt = 0;
 double tTime = 0;
+float life = 2.5;
 
-ros::Duration lifetime(3,0);
 ros::Time last;
 visualization_msgs::Marker waypoint, trajectory;
 ros::Publisher waypoint_viz;
@@ -35,7 +35,7 @@ void waypointCallback(const asctec_msgs::MinAccelCmd::ConstPtr& msg)
 	tTime = std::max(tTime, 0.0);
 	last = ros::Time::now();
 
-	waypoint.lifetime = ros::Duration(1+tTime+msg->time);
+	waypoint.lifetime = ros::Duration(life+tTime+msg->time);
 	waypoint.action = visualization_msgs::Marker::ADD;
 	waypoint.pose.position.x = msg->position.x;
 	waypoint.pose.position.y = msg->position.y;
@@ -69,6 +69,7 @@ int main(int argc, char** argv) {
 	std::string world = "/odom";
 	ros::param::get("~topic_name", topic_name);
 	ros::param::get("~frame", world);
+	ros::param::get("~decay", life);
 
 	waypoint_viz = nh.advertise<visualization_msgs::Marker>(topic_name+"/asctec_viz", 10);
 
@@ -94,7 +95,7 @@ int main(int argc, char** argv) {
 	trajectory.scale.z = 0.0125;
 	trajectory.color.a = 0.8;
 	trajectory.color.g = 1.0;
-	trajectory.lifetime = lifetime;
+	trajectory.lifetime = ros::Duration(life);
 	last = ros::Time::now();
 
 	ROS_INFO("Listening on topic set: %s", topic_name.c_str());

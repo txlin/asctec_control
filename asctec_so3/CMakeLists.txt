@@ -142,7 +142,7 @@ add_library(asctec_so3
 
 ## Declare a C++ executable
 add_executable(asctec_control_node src/so3_control_node.cpp)
-add_executable(asctec_vicon_node src/so3_vicon_odom.cpp)
+add_executable(asctec_vicon_node src/vicon_odom.cpp)
 add_executable(ugv_vicon_node src/ugv_vicon_odom.cpp)
 add_executable(speed_test_node src/speed_test.cpp)
 add_executable(nl_wand_node src/wand_demo.cpp)
