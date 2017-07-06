@@ -1,14 +1,15 @@
 <launch>
 
   <arg name="port" value="/dev/ttyUSB0" />
-  <arg name="q_name" value="hummingbird_2" />
-  <arg name="controller" value="asctec_so3_control" />
+  <arg name="q_name" value="hummingbird" />
+  <arg name="controller" value="asctec" />
   <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
   <arg name="w_frame" value="/odom" />
 	<arg name="rviz" value="track.rviz"/>
 	<arg name="mesh" value="package://mesh_visualization/meshes/hummingbird.mesh"/>
-	
-  <include file="$(find vicon_bridge)/launch/vicon.launch" />
+	<arg name="dummy" value="true"/>
+
+  <include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg dummy)"/>
   <node name="joy_controller" pkg="joy" type="joy_node" output="screen"/>
 
 	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find asctec_viz)/rviz/$(arg rviz)" />
@@ -31,15 +32,15 @@
   </node>
 
   <node pkg="trajectory_gen"
-    type="min_accel_node"
-    name="min_accel"
+    type="min_snap_node"
+    name="min_snap"
     required="true"
     output="screen">
     <param name="rate" value="40"/>
     <param name="topic_name" value="$(arg controller)"/>
   </node>
 
-  <node pkg="asctec_ll_updated" name="$(arg q_name)" type="asctec_ll_updated_node" output="screen" respawn="true">
+  <node pkg="asctec_ll_updated" name="$(arg q_name)" type="asctec_ll_updated_node" output="screen" unless="$(arg dummy)">
      <param name="port" value="$(arg port)"/>
      <param name="ll_status_rate" value="1"/>
      <param name="imu_calc_data_rate" value="0"/>
@@ -49,17 +50,30 @@
      <remap from="~cmd_si" to="/asctec_so3_control/si_command" />
   </node>
 
-  <node pkg="asctec_so3"
-    type="asctec_vicon_node"
-    name="asctec_vicon"
-    required="true"
-    output="screen">
-    <param name="q_name" value="$(arg controller)"/>
-    <param name="q_frame" value="$(arg q_frame)"/>
-    <param name="w_frame" value="$(arg w_frame)"/>
-  </node>
+	<node pkg="asctec_so3"
+		type="dummy_odom_node"
+		name="dummy_odom"
+		required="true"
+		output="screen" 
+		if="$(arg dummy)">
+		<param name="rate" value="40"/>
+		<param name="q_name" value="$(arg controller)"/>
+		<param name="q_frame" value="$(arg q_frame)"/>
+		<param name="w_frame" value="$(arg w_frame)"/>
+		<param name="track" value="true"/>
+	</node>
 
-  <node pkg="asctec_so3"
+	<node pkg="asctec_launch"
+		type="asctec_vicon_node"
+		name="asctec_vicon"
+		required="true"
+		output="screen">
+		<param name="q_name" value="$(arg controller)"/>
+		<param name="q_frame" value="$(arg q_frame)"/>
+		<param name="w_frame" value="$(arg w_frame)"/>
+	</node>
+
+  <node pkg="asctec_launch"
     type="ugv_vicon_node"
     name="ugv_vicon"
     required="true"
@@ -69,21 +83,13 @@
     <param name="w_frame" value="$(arg w_frame)"/>
   </node>
 
-	<node pkg="asctec_so3"
+	<node pkg="asctec_launch"
 		type="nl_track_node"
 		name="tracky"
 		output="screen">
     <param name="ugv_odom" value="/jackal1/odom"/>
     <param name="w_frame" value="$(arg w_frame)"/>
 		<param name="topic" value="$(arg controller)"/>
-	</node>
-
-	<node pkg="asctec_viz"
-		type="hummingbird_viz_node"
-		name="hummingbird_viz"
-		output="screen">
-		<param name="topic_name" value="$(arg controller)"/>
-		<param name="mesh_resource" value="$(arg mesh)"/>
 	</node>
 
 </launch>

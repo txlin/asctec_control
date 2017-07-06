@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   cmake_modules
-  message_generation
   tf
 )
 find_package(Eigen REQUIRED)
@@ -110,7 +109,7 @@ find_package(Eigen REQUIRED)
 catkin_package(
 INCLUDE_DIRS include
   LIBRARIES asctec_so3
-  CATKIN_DEPENDS nav_msgs asctec_msgs roscpp std_msgs tf message_runtime
+  CATKIN_DEPENDS nav_msgs asctec_msgs roscpp std_msgs tf
   DEPENDS system_lib Eigen
 )
 
@@ -142,12 +141,6 @@ add_library(asctec_so3
 
 ## Declare a C++ executable
 add_executable(asctec_control_node src/so3_control_node.cpp)
-add_executable(asctec_vicon_node src/vicon_odom.cpp)
-add_executable(ugv_vicon_node src/ugv_vicon_odom.cpp)
-add_executable(speed_test_node src/speed_test.cpp)
-add_executable(nl_wand_node src/wand_demo.cpp)
-add_executable(nl_track_node src/ugv.cpp)
-add_executable(square_node src/square.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -158,35 +151,11 @@ add_executable(square_node src/square.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(asctec_control_node so3_control_generate_messages_cpp)
-add_dependencies(asctec_vicon_node so3_control_generate_messages_cpp)
-add_dependencies(ugv_vicon_node so3_control_generate_messages_cpp)
-add_dependencies(speed_test_node so3_control_generate_messages_cpp)
-add_dependencies(nl_wand_node so3_control_generate_messages_cpp)
-add_dependencies(nl_track_node so3_control_generate_messages_cpp)
-add_dependencies(square_node so3_control_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(asctec_control_node
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
-)
-target_link_libraries(asctec_vicon_node
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(ugv_vicon_node
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(speed_test_node
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(nl_wand_node
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(nl_track_node
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(square_node
-  ${catkin_LIBRARIES}
 )
 
 #############

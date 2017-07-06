@@ -27,6 +27,7 @@ void viconCallback(const geometry_msgs::TransformStamped::ConstPtr &msg)
 
 	odom_pub.publish(odom);	
 }
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "vicon_odom");

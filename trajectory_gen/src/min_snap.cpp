@@ -1,87 +1,124 @@
-#include <min_accel.h>
+#include <min_snap.h>
 
 using Eigen::MatrixXf;
 
-MinAccel::MinAccel()
+MinSnap::MinSnap()
 {
  /* Trajectory class constructor
   * - Holds A, B, X, T matricies
   * - Can return next waypoint upon call
+	*	-			7		 6		5		 4		3		2		1		0
+	*	-			---------------------------------	
+	* - A= [0		 0		0		 0 		0 	0 	0 	1		0 | 0
+	*	-			1 	 1		1 	 1 		1 	1 	1   1 	0	|	1 - t
+	*	-			0 	 0		0 	 0 		0 	0 	1 	0		2	|	2
+	* -			7		 6		5		 4		3		2		1		0		0	| 3	- dt
+	* -			0 	 0 	  0		 0		0		2		0		0		0	| 4
+	* -			42 	 30		20	 12		6		2		0		0		0	|	5	- dt^2
+	* -			0 	 0		0		 0		6		0		0		0		0	|	6
+	* -			252  120	60 	 24		6		0		0		0		0	|	7	- dt^3
   */
 
-	A = MatrixXf::Zero(4,4);
-	A(0,3) = 1.0;
-	A(2,2) = 1.0; 
+	A = MatrixXf::Zero(8,8);
+	A(0,7) = 1.0;
+	A(2,6) = 1.0;
+	A(4,5) = 2.0; 
+	A(6,4) = 6.0;
 
-	Bx = MatrixXf::Zero(4,1);
-	By = MatrixXf::Zero(4,1);
-  Bz = MatrixXf::Zero(4,1);
-	Byaw = MatrixXf::Zero(4,1);
+	Bx = MatrixXf::Zero(8,1);
+	By = MatrixXf::Zero(8,1);
+  Bz = MatrixXf::Zero(8,1);
+	Byaw = MatrixXf::Zero(8,1);
 
 	path_.header.frame_id = odom_.header.frame_id;
 	path_.type = visualization_msgs::Marker::CUBE_LIST;
 	path_.action = visualization_msgs::Marker::ADD;
-	path_.ns = "path_accel";
+	path_.ns = "path_snap";
 	path_.id = 0;
 	path_.scale.x = 0.0125;
 	path_.scale.y = 0.0125;
 	path_.scale.z = 0.0125;
 	path_.color.a = 0.65;
-	path_.color.r = 0.8;
-	path_.color.b = 0.8;
+	path_.color.g = 1.0;
+	path_.color.r = 1.0;
 }
 
-void MinAccel::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
+void MinSnap::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
 {
- /* Grab wp from WaypointCmd msg
+ /* Grab wp from WaypointCommand msg
   * Calculate new X matrix and add to X vector
-  * Set init based on if continuing or starting a trajectory
+  * Set init based on continuing or starting a trajectory
   */
 	if(wp->time == 0){ ROS_INFO("Ignored: time = 0"); return;}
   if(T.size() == 0) {
   	Bx(0,0) = odom_.pose.pose.position.x;
     Bx(2,0) = odom_.twist.twist.linear.x;
+    Bx(4,0) = 0.0;
+    Bx(6,0) = 0.0;
    
   	By(0,0) = odom_.pose.pose.position.y;
     By(2,0) = odom_.twist.twist.linear.y;
+    By(4,0) = 0.0;
+    By(6,0) = 0.0;
       
   	Bz(0,0) = odom_.pose.pose.position.z;
     Bz(2,0) = odom_.twist.twist.linear.z;
-      
+    Bz(4,0) = 0.0;
+    Bz(6,0) = 0.0;
+
   	Byaw(0,0) = odom_.pose.pose.orientation.z;
     Byaw(2,0) = odom_.twist.twist.angular.z;
+    Byaw(4,0) = 0.0;
+    Byaw(6,0) = 0.0;
 
     t0 = ros::Time::now();
 
   }else {
   	Bx(0,0) = Bx(1,0);
     Bx(2,0) = Bx(3,0);
-      
+    Bx(4,0) = Bx(5,0);
+    Bx(6,0) = Bx(7,0);  
+   
   	By(0,0) = By(1,0);
     By(2,0) = By(3,0);
+    By(4,0) = By(5,0);
+    By(6,0) = By(7,0);
       
   	Bz(0,0) = Bz(1,0);
     Bz(2,0) = Bz(3,0);
+    Bz(4,0) = Bz(5,0);
+    Bz(6,0) = Bz(7,0);
 
   	Byaw(0,0) = Byaw(1,0);
     Byaw(2,0) = Byaw(3,0);
+    Byaw(4,0) = Byaw(5,0);
+    Byaw(6,0) = Byaw(7,0);
 
   }
   Bx(1,0) = wp->position.x;
   Bx(3,0) = wp->velocity.x;
+  Bx(5,0) = wp->accel.x;
+  Bx(7,0) = wp->jerk.x;
     
   By(1,0) = wp->position.y;
   By(3,0) = wp->velocity.y;
-  
+  By(5,0) = wp->accel.y;
+  By(7,0) = wp->jerk.y;
+    
   Bz(1,0) = wp->position.z;
   Bz(3,0) = wp->velocity.z;
- 
+  Bz(5,0) = wp->accel.z;
+  Bz(7,0) = wp->jerk.z;
+    
   Byaw(1,0) = wp->yaw[0];
   Byaw(3,0) = wp->yaw[1];
+  Byaw(5,0) = wp->yaw[2];
 
-	for(int i=3; i>=0; i--) {
-		A(1,3-i) = pow(wp->time,i);
-		A(3,3-i) = i*pow(wp->time,i-1);
+	for(int i=7; i>=0; i--) {
+		A(1,7-i) = pow(wp->time,i);
+		A(3,7-i) = i*pow(wp->time,i-1);
+		A(5,7-i) = i*(i-1)*pow(wp->time,i-2);
+		A(7,7-i) = i*(i-2)*pow(wp->time,i-3);
 	}
 
   MatrixXf * x = new MatrixXf;
@@ -103,30 +140,30 @@ void MinAccel::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
   T.push_back(wp->time);
 }
 
-void MinAccel::setState(const nav_msgs::Odometry::ConstPtr& odom) {
+void MinSnap::setState(const nav_msgs::Odometry::ConstPtr& odom) {
   odom_ = *odom;
 }
 
-bool MinAccel::getStatus(void) {
+bool MinSnap::getStatus(void) {
 	return T.size() == 0;
 }
 
-visualization_msgs::Marker *MinAccel::deleteMarker(void) {
+visualization_msgs::Marker *MinSnap::deleteMarker(void) {
 	path_.points.clear();
 	path_.action = 3;
 	return &path_;
 }
 
-visualization_msgs::Marker *MinAccel::getMarker(void) {
+visualization_msgs::Marker *MinSnap::getMarker(void) {
 	double ts = ros::Time::now().toSec() - t0.toSec();
 	if(ts >= T.front()) ts = T.front();
 	path_.points.clear();
 	for(double t=ts; t<T.front(); t+=0.1) {
 		geometry_msgs::Point p;
-		for(int i=3; i>=0; i--) {
-		  p.x += Xx.front()->operator()(3-i,0)*pow(t,i);
-		  p.y += Xy.front()->operator()(3-i,0)*pow(t,i);
-		  p.z += Xz.front()->operator()(3-i,0)*pow(t,i);
+		for(int i=7; i>=0; i--) {
+		  p.x += Xx.front()->operator()(7-i,0)*pow(t,i);
+		  p.y += Xy.front()->operator()(7-i,0)*pow(t,i);
+		  p.z += Xz.front()->operator()(7-i,0)*pow(t,i);
 		}
 		path_.points.push_back(p);
 	}
@@ -137,7 +174,7 @@ visualization_msgs::Marker *MinAccel::getMarker(void) {
 	return &path_;
 }
 
-void MinAccel::resetWaypoints(void) {
+void MinSnap::resetWaypoints(void) {
 	if(T.size() == 0) return;
 	ROS_INFO("Clearing %i waypoints...", int(T.size()));
 
@@ -153,7 +190,7 @@ void MinAccel::resetWaypoints(void) {
   T.clear();
 }
 
-asctec_msgs::PositionCmd* MinAccel::getNextCommand(void) {  		
+asctec_msgs::PositionCmd* MinSnap::getNextCommand(void) {  		
   if(T.size() != 0) {
   	double t = ros::Time::now().toSec() - t0.toSec();
     if(t >= T.front()) {
@@ -173,25 +210,25 @@ asctec_msgs::PositionCmd* MinAccel::getNextCommand(void) {
     if(T.size() != 0) {
       asctec_msgs::PositionCmd cmd;
 			cmd.header.stamp = ros::Time::now();
-      for(int i=3; i>=0; i--) {
-        cmd.position.x += Xx.front()->operator()(3-i,0)*pow(t,i);
-        cmd.velocity.x += i*Xx.front()->operator()(3-i,0)*pow(t,i-1);
-        cmd.accel.x += i*(i-1)*Xx.front()->operator()(3-i,0)*pow(t,i-2);
+      for(int i=7; i>=0; i--) {
+        cmd.position.x += Xx.front()->operator()(7-i,0)*pow(t,i);
+        cmd.velocity.x += i*Xx.front()->operator()(7-i,0)*pow(t,i-1);
+        cmd.accel.x += i*(i-1)*Xx.front()->operator()(7-i,0)*pow(t,i-2);
 
-        cmd.position.y += Xy.front()->operator()(3-i,0)*pow(t,i);
-        cmd.velocity.y += i*Xy.front()->operator()(3-i,0)*pow(t,i-1);
-        cmd.accel.y += i*(i-1)*Xy.front()->operator()(3-i,0)*pow(t,i-2);
+        cmd.position.y += Xy.front()->operator()(7-i,0)*pow(t,i);
+        cmd.velocity.y += i*Xy.front()->operator()(7-i,0)*pow(t,i-1);
+        cmd.accel.y += i*(i-1)*Xy.front()->operator()(7-i,0)*pow(t,i-2);
 	
-        cmd.position.z += Xz.front()->operator()(3-i,0)*pow(t,i);
-        cmd.velocity.z += i*Xz.front()->operator()(3-i,0)*pow(t,i-1);
-        cmd.accel.z += i*(i-1)*Xz.front()->operator()(3-i,0)*pow(t,i-2);
+        cmd.position.z += Xz.front()->operator()(7-i,0)*pow(t,i);
+        cmd.velocity.z += i*Xz.front()->operator()(7-i,0)*pow(t,i-1);
+        cmd.accel.z += i*(i-1)*Xz.front()->operator()(7-i,0)*pow(t,i-2);
 
-        cmd.yaw[0] += Xyaw.front()->operator()(3-i,0)*pow(t,i);
-        cmd.yaw[1] += i*Xyaw.front()->operator()(3-i,0)*pow(t,i-1);
-        cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(3-i,0)*pow(t,i-2);
+        cmd.yaw[0] += Xyaw.front()->operator()(7-i,0)*pow(t,i);
+        cmd.yaw[1] += i*Xyaw.front()->operator()(7-i,0)*pow(t,i-1);
+        cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(7-i,0)*pow(t,i-2);
 
       }
-			//cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
+			cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
       cmd_ = cmd;
     }
   }

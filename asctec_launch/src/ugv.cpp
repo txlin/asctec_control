@@ -6,7 +6,7 @@
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
 
-#include <asctec_msgs/MinAccelCmd.h>
+#include <asctec_msgs/WaypointCmd.h>
 #include <asctec_msgs/PositionCmd.h>
 
 #include <nav_msgs/Odometry.h>
@@ -182,7 +182,7 @@ void showBorder(bool outOf, float z)
 
 void sendTrajectory(float time, float x, float y, float z, float yaw) 
 {
-	asctec_msgs::MinAccelCmd cmd;
+	asctec_msgs::WaypointCmd cmd;
 	cmd.position.x = x;
 	cmd.position.y = y;
 	cmd.position.z = z;
@@ -207,7 +207,7 @@ void sendPoint(float x, float y, float vx, float vy, float z, float yaw)
 
 void sendLandTrajectory(float time) 
 {
-	asctec_msgs::MinAccelCmd cmd;
+	asctec_msgs::WaypointCmd cmd;
 	cmd.position.x = 0.0;
 	cmd.position.y = 0.0;
 	cmd.position.z = 1.0;
@@ -272,7 +272,7 @@ int main(int argc, char** argv) {
 	ros::param::get("~w_frame", world);
 	ros::param::get("~ugv_odom", ugv);
 
-	wpt_pub = nh.advertise<asctec_msgs::MinAccelCmd>(topic + "/waypoints", 10);
+	wpt_pub = nh.advertise<asctec_msgs::WaypointCmd>(topic + "/waypoints", 10);
 	pos_pub = nh.advertise<asctec_msgs::PositionCmd>(topic + "/position_cmd", 10);
 	border_pub = nh.advertise<visualization_msgs::Marker>(topic + "/border", 10);
 

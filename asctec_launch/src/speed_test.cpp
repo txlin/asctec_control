@@ -1,11 +1,11 @@
 #include <ros/ros.h>
-#include <asctec_msgs/MinAccelCmd.h>
+#include <asctec_msgs/WaypointCmd.h>
 #include <std_msgs/Bool.h>
 #include <nav_msgs/Odometry.h>
 
 ros::Publisher waypoints;
 ros::Timer timer;
-asctec_msgs::MinAccelCmd waypoint;
+asctec_msgs::WaypointCmd waypoint;
 bool timing = false;
 bool first = true;
 
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
   timer = nh.createTimer(ros::Duration(1.0), timerCallback);
 	timer.stop();
 
-  waypoints = nh.advertise<asctec_msgs::MinAccelCmd>(topic_name + "/waypoints", 10); 			// Position goals to linear and nonlinear controllers
+  waypoints = nh.advertise<asctec_msgs::WaypointCmd>(topic_name + "/waypoints", 10); 			// Position goals to linear and nonlinear controllers
   ros::Subscriber status = nh.subscribe(topic_name + "/status", 1, statusCallback);				// Trajectory completion status
 
 	ros::Duration(2.0).sleep();

@@ -1,20 +1,21 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(trajectory_gen)
+project(asctec_launch)
 
-## Add support for C++11, supported in ROS Kinetic and newer
-# add_definitions(-std=c++11)
+## Compile as C++11, supported in ROS Kinetic and newer
+# add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  asctec_msgs
   nav_msgs
+  geometry_msgs
+  asctec_msgs
   roscpp
   std_msgs
-  cmake_modules
+  tf
+	message_generation
 )
-find_package(Eigen REQUIRED)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -72,7 +73,7 @@ find_package(Eigen REQUIRED)
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   asctec_msgs#   nav_msgs#   std_msgs
+#   std_msgs  # Or other packages containing msgs
 # )
 
 ################################################
@@ -105,10 +106,10 @@ find_package(Eigen REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES trajectory_gen
-  CATKIN_DEPENDS asctec_msgs nav_msgs roscpp std_msgs
-	DEPENDS system_lib Eigen
+#  INCLUDE_DIRS include
+  LIBRARIES asctec_launch
+  CATKIN_DEPENDS nav_msgs asctec_msgs roscpp std_msgs tf message_runtime
+  DEPENDS system_lib
 )
 
 ###########
@@ -117,17 +118,15 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
 include_directories(
-	include
+# include
   ${catkin_INCLUDE_DIRS}
-  ${Eigen_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-add_library(${PROJECT_NAME}
-	src/min_accel.cpp
-)
+# add_library(${PROJECT_NAME}
+#   src/${PROJECT_NAME}/asctec_launch.cpp
+# )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -137,7 +136,17 @@ add_library(${PROJECT_NAME}
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(min_accel_node src/min_accel_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/asctec_launch_node.cpp)
+add_executable(asctec_vicon_node src/vicon_odom.cpp)
+add_executable(dummy_odom_node src/dummy_odom.cpp)
+add_executable(ugv_vicon_node src/ugv_vicon_odom.cpp)
+add_executable(speed_test_node src/speed_test.cpp)
+add_executable(nl_wand_node src/wand_demo.cpp)
+add_executable(nl_track_node src/ugv.cpp)
+add_executable(square_node src/square.cpp)
+add_executable(spiral_node src/spiral.cpp)
+add_executable(circle_node src/circle.cpp)
+add_executable(aggressive_node src/aggressive.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -147,13 +156,52 @@ add_executable(min_accel_node src/min_accel_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(min_accel_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(asctec_vicon_node so3_control_generate_messages_cpp)
+add_dependencies(dummy_odom_node so3_control_generate_messages_cpp)
+add_dependencies(ugv_vicon_node so3_control_generate_messages_cpp)
+add_dependencies(speed_test_node so3_control_generate_messages_cpp)
+add_dependencies(nl_wand_node so3_control_generate_messages_cpp)
+add_dependencies(nl_track_node so3_control_generate_messages_cpp)
+add_dependencies(square_node so3_control_generate_messages_cpp)
+add_dependencies(spiral_node so3_control_generate_messages_cpp)
+add_dependencies(circle_node so3_control_generate_messages_cpp)
+add_dependencies(aggressive_node so3_control_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_node
+# target_link_libraries(${PROJECT_NAME}_node
+#   ${catkin_LIBRARIES}
+# )
+target_link_libraries(asctec_vicon_node
   ${catkin_LIBRARIES}
 )
-
+target_link_libraries(dummy_odom_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(ugv_vicon_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(speed_test_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(nl_wand_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(nl_track_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(square_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(spiral_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(circle_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(aggressive_node
+  ${catkin_LIBRARIES}
+)
 #############
 ## Install ##
 #############
@@ -194,7 +242,7 @@ target_link_libraries(${PROJECT_NAME}_node
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_trajectory_gen.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_asctec_launch.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

@@ -59,11 +59,10 @@ void position_cmd_callback(const asctec_msgs::PositionCmd::ConstPtr &cmd)
 		des_pos = Eigen::Vector3d(cmd->position.x, cmd->position.y, cmd->position.z);
 		des_vel = Eigen::Vector3d(cmd->velocity.x, cmd->velocity.y, cmd->velocity.z);
 		des_acc = Eigen::Vector3d(cmd->accel.x, cmd->accel.y, cmd->accel.z);
-
 		des_yaw = cmd->yaw[0];
 		des_yaw_dot = cmd->yaw[1];
+
 		position_cmd_updated = true;
-		
 		publishSO3Command();
 	}
 }
@@ -84,7 +83,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr &odom)
 
 	if(!position_cmd_init) {
 		des_pos = position;
-		des_vel = velocity;
+		des_vel = Eigen::Vector3d(0, 0, 0);
 		des_acc = Eigen::Vector3d(0, 0, 0);
 		des_yaw = current_yaw;
 		des_yaw_dot = 0.0;

@@ -127,6 +127,9 @@ include_directories(
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
 	src/min_accel.cpp
+	src/min_jerk.cpp
+	src/min_snap.cpp
+	src/min_crackle.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -138,6 +141,9 @@ add_library(${PROJECT_NAME}
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(min_accel_node src/min_accel_node.cpp)
+add_executable(min_jerk_node src/min_jerk_node.cpp)
+add_executable(min_snap_node src/min_snap_node.cpp)
+add_executable(min_crackle_node src/min_crackle_node.cpp)
 add_executable(redirect_node src/avoidance.cpp)
 
 ## Rename C++ executable without prefix
@@ -149,10 +155,22 @@ add_executable(redirect_node src/avoidance.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(min_accel_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(min_jerk_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(min_snap_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(min_crackle_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(redirect_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(min_accel_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(min_jerk_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(min_snap_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(min_crackle_node
   ${catkin_LIBRARIES}
 )
 target_link_libraries(redirect_node

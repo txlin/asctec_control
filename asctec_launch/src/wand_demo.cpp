@@ -6,7 +6,7 @@
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
 
-#include <asctec_msgs/MinAccelCmd.h>
+#include <asctec_msgs/WaypointCmd.h>
 #include <asctec_msgs/PositionCmd.h>
 #include <asctec_msgs/SICmd.h>
 
@@ -323,7 +323,7 @@ void showBorder(bool outOf, float z)
 
 void sendTrajectory(float x, float y, float z) 
 {
-	asctec_msgs::MinAccelCmd cmd;
+	asctec_msgs::WaypointCmd cmd;
 	cmd.position.x = x;
 	cmd.position.y = y;
 	cmd.position.z = z;
@@ -339,7 +339,7 @@ void sendTrajectory(float x, float y, float z)
 
 void sendBorderTrajectory()
 {
-	asctec_msgs::MinAccelCmd cmd;
+	asctec_msgs::WaypointCmd cmd;
 	cmd.position.x = std::min(odom_.pose.pose.position.x, sXBOUND_H);
 	cmd.position.x = std::max(cmd.position.x, sXBOUND_L);
 	cmd.position.y = std::min(odom_.pose.pose.position.y, sYBOUND_H);
@@ -370,7 +370,7 @@ void sendBorderTrajectory()
 
 void sendLandTrajectory() 
 {
-	asctec_msgs::MinAccelCmd cmd;
+	asctec_msgs::WaypointCmd cmd;
 	cmd.reset = true;
 	cmd.position.x = 0.0;
 	cmd.position.y = 0.0;
@@ -439,7 +439,7 @@ int main(int argc, char** argv) {
 	si_pub = nh.advertise<asctec_msgs::SICmd>(topic + "/si_remap", 10);
 	cmd_pub = nh.advertise<asctec_msgs::PositionCmd>(topic + "/position_cmd", 10);
 
-	wpt_pub = nh.advertise<asctec_msgs::MinAccelCmd>(topic + "/waypoints", 10);
+	wpt_pub = nh.advertise<asctec_msgs::WaypointCmd>(topic + "/waypoints", 10);
 	border_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/border", 10);
 	sborder_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/soft_border", 10);
 

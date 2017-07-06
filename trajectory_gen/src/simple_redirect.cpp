@@ -3,7 +3,7 @@
 #include <vector>
 #include <cmath>
 #include <ros/ros.h>
-#include <asctec_msgs/MinAccelCmd.h>
+#include <asctec_msgs/WaypointCmd.h>
 #include <nav_msgs/Odometry.h>
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/Point.h>
@@ -12,16 +12,21 @@
 #define maxA 0.3
 
 std::string topic, frame;
-asctec_msgs::MinAccelCmd goal;
+asctec_msgs::WaypointCmd goal;
 nav_msgs::Odometry odom_;
 ros::Publisher wpt_pub, obs_pub;
+
+typedef struct obstacle
+{
+	float x,y,r;
+}obs;
 
 void publishRedirect(struct node *n0, struct node *ng, std::pair<std::vector<std::pair<float,float> >,float> *path)
 {
 	float angle = atan2((*ng).y-(*n0).y, (*ng).x-(*n0).x);
 	bool first = true;
 	for(std::vector<std::pair<float,float> >::iterator i=path->first.begin(); i != path->first.end()-1; i++) {
-		asctec_msgs::MinAccelCmd cmd;
+		asctec_msgs::WaypointCmd cmd;
 		if(first) {cmd.reset = true; first = false;}
 		cmd.position.x = (i+1)->first;
 		cmd.position.y = (i+1)->second;
@@ -37,27 +42,16 @@ void publishRedirect(struct node *n0, struct node *ng, std::pair<std::vector<std
 	}
 }
 
-void redirectCallback(const asctec_msgs::MinAccelCmd::ConstPtr& msg)
+void redirectCallback(const geometry_msgs::Point::ConstPtr& msg)
 {
-	struct node n0, ng;
-	n0.x = odom_.pose.pose.position.x;
-	n0.y = odom_.pose.pose.position.y;
-
-	ng.x = msg->position.x;
-	ng.y = msg->position.y;
-	ng.goal = true;
-	
 	std::vector<struct obstacle> obs;
-	for(int i=0; i<4; i++) {
+	for(int i=0; i<1; i++) {
 		struct obstacle *o = new struct obstacle;
-		o->x = -1 + 6*float(rand() % 100) / 100;
-		o->y = -1 + 6*float(rand() % 100) / 100;
-		o->r = 1.2;
-		o->sr = 0.75;
-		o->ar = 0.3;
+		o->x = -5 + 10*float(rand() % 100) / 100;
+		o->y = -5 + 10*float(rand() % 100) / 100;
+		o->r = 0.5;
 		obs.push_back(*o);
 	}
-	obs = *orderObstacles(&obs, &ng);
 	visualization_msgs::Marker obstacles;
 	obstacles.action = 3;
 	visualization_msgs::Marker empty;
@@ -66,6 +60,7 @@ void redirectCallback(const asctec_msgs::MinAccelCmd::ConstPtr& msg)
 
 	obstacles.header.frame_id = frame;
 	obstacles.type = visualization_msgs::Marker::POINTS;
+	obstacles.ns = "obstacles";
 	obstacles.id = 0;
 	obstacles.scale.x = 0.025;
 	obstacles.scale.y = 0.025;
@@ -82,33 +77,11 @@ void redirectCallback(const asctec_msgs::MinAccelCmd::ConstPtr& msg)
 			p.z = odom_.pose.pose.position.z;
 			obstacles.points.push_back(p);
 		}
-		for(float j=-M_PI; j<M_PI; j+=0.1) {
-			geometry_msgs::Point p;
-			p.x = i->x+cos(j)*i->ar;
-			p.y = i->y+sin(j)*i->ar;
-			p.z = odom_.pose.pose.position.z;
-			obstacles.points.push_back(p);
-		}
-		for(float j=-M_PI; j<M_PI; j+=0.1) {
-			geometry_msgs::Point p;
-			p.x = i->x+cos(j)*i->sr;
-			p.y = i->y+sin(j)*i->sr;
-			p.z = odom_.pose.pose.position.z;
-			obstacles.points.push_back(p);
-		}
 	}
 	obs_pub.publish(obstacles);
 
-	std::vector<std::pair<struct node, struct node> > nodes;
-	nodes = *generateNodes(&n0, &ng, &nodes, &obs);
-	n0 = *buildTree(&n0, &ng, &obs, &nodes);
-
-	std::pair<std::vector<std::pair<float,float> >,float> path;
-	path = *searchTree(&path, &n0);
-	if(path.second < 1000) {publishRedirect(&n0, &ng, &path);}
-	else {ROS_INFO("No safe path to %.2f, %.2f", ng.x, ng.y);}
-	obs.clear();
 	
+	obs.clear();	
 }
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg)
@@ -124,8 +97,8 @@ int main(int argc, char** argv) {
   ros::param::get("~world_frame", frame);
 
 	/* -------------------- Publishers, and Subscribers -------------------- */
-  wpt_pub = nh.advertise<asctec_msgs::MinAccelCmd>(topic + "/waypoints", 10); 																			// Position goals to linear and nonlinear controllers 
-  obs_pub = nh.advertise<visualization_msgs::Marker>(topic + "/obstacles", 10); 																		// Obstacle positions
+  wpt_pub = nh.advertise<asctec_msgs::WaypointCmd>(topic + "/waypoints", 10); 																			// Position goals to linear and nonlinear controllers 
+  obs_pub = nh.advertise<visualization_msgs::Marker>(topic + "/asctec_viz", 10); 																		// Obstacle positions
   ros::Subscriber redirect_sub = nh.subscribe(topic + "/redirect", 1, redirectCallback);														// Redirect data
   ros::Subscriber odom_sub = nh.subscribe(topic + "/odom", 1, odomCallback);																				// odom data
 

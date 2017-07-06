@@ -9,47 +9,47 @@ PIDControl::PIDControl()
 {
 }
 
-void PIDControl::setMass(const float mass)
+void PIDControl::setMass(const double mass)
 {
   mass_ = mass;
 }
 
-void PIDControl::setGravity(const float g)
+void PIDControl::setGravity(const double g)
 {
   g_ = g;
 }
 
-void PIDControl::setPosition(const Eigen::Vector3f &position)
+void PIDControl::setPosition(const Eigen::Vector3d &position)
 {
   pos_ = position;
 }
 
-void PIDControl::setVelocity(const Eigen::Vector3f &velocity)
+void PIDControl::setVelocity(const Eigen::Vector3d &velocity)
 {
   vel_ = velocity;
 }
 
-void PIDControl::setYaw(const float current_yaw)
+void PIDControl::setYaw(const double current_yaw)
 {
   current_yaw_ = current_yaw;
 }
 
-void PIDControl::setMaxIntegral(const float max_integral)
+void PIDControl::setMaxIntegral(const double max_integral)
 {
   max_pos_int_ = max_integral;
 }
 
-void PIDControl::calculateControl(const Eigen::Vector3f &des_pos,
-                                  const Eigen::Vector3f &des_vel,
-                                  const Eigen::Vector3f &des_acc,
-                                  const float des_yaw,
-                                  const Eigen::Vector3f &kx,
-                                  const Eigen::Vector3f &kv,
-                                  const Eigen::Vector3f &ki,
-                                  const float ki_yaw)
+void PIDControl::calculateControl(const Eigen::Vector3d &des_pos,
+                                  const Eigen::Vector3d &des_vel,
+                                  const Eigen::Vector3d &des_acc,
+                                  const double des_yaw,
+                                  const Eigen::Vector3d &kx,
+                                  const Eigen::Vector3d &kv,
+                                  const Eigen::Vector3d &ki,
+                                  const double ki_yaw)
 {
-  Eigen::Vector3f e_pos = (des_pos - pos_);
-  Eigen::Vector3f e_vel = (des_vel - vel_);
+  Eigen::Vector3d e_pos = (des_pos - pos_);
+  Eigen::Vector3d e_vel = (des_vel - vel_);
   for(int i = 0; i < 3; i++)
   {
     if(kx(i) != 0)
@@ -64,12 +64,12 @@ void PIDControl::calculateControl(const Eigen::Vector3f &des_pos,
 
   //std::cout << pos_int_.transpose() << std::endl;
 
-  Eigen::Vector3f force_des = kx.asDiagonal()*e_pos + pos_int_ + kv.asDiagonal()*e_vel + mass_*des_acc;
+  Eigen::Vector3d force_des = kx.asDiagonal()*e_pos + pos_int_ + kv.asDiagonal()*e_vel + mass_*des_acc;
 
-  float roll_des = force_des(0)*sin(current_yaw_) - force_des(1)*cos(current_yaw_);
-  float pitch_des = force_des(0)*cos(current_yaw_) + force_des(1)*sin(current_yaw_);
+  double roll_des = force_des(0)*sin(current_yaw_) - force_des(1)*cos(current_yaw_);
+  double pitch_des = force_des(0)*cos(current_yaw_) + force_des(1)*sin(current_yaw_);
 
-  float e_yaw = (des_yaw - current_yaw_);
+  double e_yaw = (des_yaw - current_yaw_);
 
   yaw_int_ += ki_yaw*e_yaw;
   if(yaw_int_ > M_PI)
@@ -83,14 +83,14 @@ void PIDControl::calculateControl(const Eigen::Vector3f &des_pos,
   trpy_(3) = des_yaw + yaw_int_;
 }
 
-const Eigen::Vector4f &PIDControl::getControls(void)
+const Eigen::Vector4d &PIDControl::getControls(void)
 {
   return trpy_;
 }
 
 void PIDControl::resetIntegrals(void)
 {
-  pos_int_ = Eigen::Vector3f::Zero();
+  pos_int_ = Eigen::Vector3d::Zero();
   yaw_int_ = 0;
 }
 

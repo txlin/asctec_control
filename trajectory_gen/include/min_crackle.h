@@ -1,12 +1,15 @@
-#ifndef MINACC_H
-#define MINACC_H
+#ifndef MINCRACKLE_H
+#define MINCRACKLE_H
 
 #include <ros/ros.h>
 #include <Eigen/Dense>
 #include <asctec_msgs/PositionCmd.h>
-#include <asctec_msgs/MinAccelCmd.h>
+#include <asctec_msgs/WaypointCmd.h>
 #include <nav_msgs/Odometry.h>
+#include <visualization_msgs/Marker.h>
+#include <geometry_msgs/Point.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Empty.h>
 #include <math.h>
 #include <string.h>
 #include <iostream>
@@ -15,13 +18,15 @@
 using Eigen::MatrixXf;
 
 /* -------------------- Class Definition ---------------- */
-class MinAccel
+class MinCrackle
 {
 	public:
-		MinAccel();
+		MinCrackle();
 		asctec_msgs::PositionCmd* getNextCommand(void);
-		void setState(nav_msgs::Odometry odom);
-		void addWaypoint(asctec_msgs::MinAccelCmd wp);
+		void setState(const nav_msgs::Odometry::ConstPtr& odom);
+		visualization_msgs::Marker *getMarker(void);
+		visualization_msgs::Marker *deleteMarker(void);
+		void addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp);
 		void resetWaypoints(void);
 		bool getStatus(void);
 
@@ -34,5 +39,6 @@ class MinAccel
   	MatrixXf Bx, By, Bz, Byaw;
     nav_msgs::Odometry odom_;
   	asctec_msgs::PositionCmd cmd_;
+		visualization_msgs::Marker path_;
 };
 #endif

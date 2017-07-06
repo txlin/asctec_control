@@ -3,7 +3,7 @@
 #include <vector>
 #include <cmath>
 #include <ros/ros.h>
-#include <asctec_msgs/MinAccelCmd.h>
+#include <asctec_msgs/WaypointCmd.h>
 #include <nav_msgs/Odometry.h>
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/Point.h>
@@ -12,7 +12,7 @@
 #define maxA 0.3
 
 std::string topic, frame;
-asctec_msgs::MinAccelCmd goal;
+asctec_msgs::WaypointCmd goal;
 nav_msgs::Odometry odom_;
 ros::Publisher wpt_pub, obs_pub;
 
@@ -183,10 +183,10 @@ std::pair<std::vector<std::pair<float,float> >,float> *searchTree(std::pair<std:
 
 void publishRedirect(struct node *n0, struct node *ng, std::pair<std::vector<std::pair<float,float> >,float> *path)
 {
-	float angle = atan2((*ng).y-(*n0).y, (*ng).x-(*n0).x);
 	bool first = true;
 	for(std::vector<std::pair<float,float> >::iterator i=path->first.begin(); i != path->first.end()-1; i++) {
-		asctec_msgs::MinAccelCmd cmd;
+		float angle = atan2((*ng).y-(*(i+1)).second, (*ng).x-(*(i+1)).first);
+		asctec_msgs::WaypointCmd cmd;
 		if(first) {cmd.reset = true; first = false;}
 		cmd.position.x = (i+1)->first;
 		cmd.position.y = (i+1)->second;
@@ -202,14 +202,14 @@ void publishRedirect(struct node *n0, struct node *ng, std::pair<std::vector<std
 	}
 }
 
-void redirectCallback(const asctec_msgs::MinAccelCmd::ConstPtr& msg)
+void redirectCallback(const geometry_msgs::Point::ConstPtr& msg)
 {
 	struct node n0, ng;
 	n0.x = odom_.pose.pose.position.x;
 	n0.y = odom_.pose.pose.position.y;
 
-	ng.x = msg->position.x;
-	ng.y = msg->position.y;
+	ng.x = msg->x;
+	ng.y = msg->y;
 	ng.goal = true;
 	
 	std::vector<struct obstacle> obs;
@@ -289,7 +289,7 @@ int main(int argc, char** argv) {
   ros::param::get("~world_frame", frame);
 
 	/* -------------------- Publishers, and Subscribers -------------------- */
-  wpt_pub = nh.advertise<asctec_msgs::MinAccelCmd>(topic + "/waypoints", 10); 																			// Position goals to linear and nonlinear controllers 
+  wpt_pub = nh.advertise<asctec_msgs::WaypointCmd>(topic + "/waypoints", 10); 																			// Position goals to linear and nonlinear controllers 
   obs_pub = nh.advertise<visualization_msgs::Marker>(topic + "/obstacles", 10); 																		// Obstacle positions
   ros::Subscriber redirect_sub = nh.subscribe(topic + "/redirect", 1, redirectCallback);														// Redirect data
   ros::Subscriber odom_sub = nh.subscribe(topic + "/odom", 1, odomCallback);																				// odom data

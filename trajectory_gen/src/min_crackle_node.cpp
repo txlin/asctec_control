@@ -1,35 +1,35 @@
-#include <min_accel.h>
-#include "min_accel.cpp"
+#include <min_crackle.h>
+#include "min_crackle.cpp"
 
 ros::Publisher pos_goal, status, wp_viz;
-MinAccel min_accel;
+MinCrackle min_crackle;
 
 /* -------------------- callbacks -------------------- */
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg)
 {
-  min_accel.setState(msg);
+  min_crackle.setState(msg);
 }
 
 void waypointCallback(const asctec_msgs::WaypointCmd::ConstPtr& msg)
 {
-	if(msg->reset) min_accel.resetWaypoints();
-	if(msg->reset) wp_viz.publish(*min_accel.deleteMarker());
-	min_accel.addWaypoint(msg);
+	if(msg->reset) min_crackle.resetWaypoints();
+	if(msg->reset) wp_viz.publish(*min_crackle.deleteMarker());
+	min_crackle.addWaypoint(msg);
 }
 
 void timerCallback(const ros::TimerEvent& event)
 {
 	std_msgs::Bool temp;
-	temp.data = min_accel.getStatus();
+	temp.data = min_crackle.getStatus();
 	status.publish(temp);
 	if(!temp.data) {
-		pos_goal.publish(*min_accel.getNextCommand());
-		wp_viz.publish(*min_accel.getMarker());
+		pos_goal.publish(*min_crackle.getNextCommand());
+		wp_viz.publish(*min_crackle.getMarker());
 	}
 }
 
 int main(int argc, char** argv) {
-	ros::init(argc, argv, "min_accel");
+	ros::init(argc, argv, "min_crackle");
 	ros::NodeHandle nh;
 
 	/* -------------------- roslaunch parameter values -------------------- */
@@ -48,8 +48,8 @@ int main(int argc, char** argv) {
   ros::Subscriber odom_sub = nh.subscribe(topic_name + "/odom", 10, odomCallback);																				// Odometry data
   ros::Subscriber wpt_sub = nh.subscribe(topic_name + "/waypoints", 100, waypointCallback);															// Waypoint data
 
-	/* -------------------- min_accel class-------------------- */
-	ROS_INFO("min_accel listening on: %s and %s", (topic_name + "/waypoints").c_str(), (topic_name + "/odom").c_str());
+	/* -------------------- Min_accel class-------------------- */
+	ROS_INFO("min_crackle listening on: %s and %s", (topic_name + "/waypoints").c_str(), (topic_name + "/odom").c_str());
 	ros::spin();
 
 	return 0;

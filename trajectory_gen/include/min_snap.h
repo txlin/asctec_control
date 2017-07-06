@@ -1,5 +1,5 @@
-#ifndef MINACC_H
-#define MINACC_H
+#ifndef MINSNAP_H
+#define MINSNAP_H
 
 #include <ros/ros.h>
 #include <Eigen/Dense>
@@ -18,10 +18,10 @@
 using Eigen::MatrixXf;
 
 /* -------------------- Class Definition ---------------- */
-class MinAccel
+class MinSnap
 {
 	public:
-		MinAccel();
+		MinSnap();
 		asctec_msgs::PositionCmd* getNextCommand(void);
 		void setState(const nav_msgs::Odometry::ConstPtr& odom);
 		visualization_msgs::Marker *getMarker(void);

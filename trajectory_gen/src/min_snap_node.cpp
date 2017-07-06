@@ -1,31 +1,35 @@
-#include <min_accel.h>
-#include "min_accel.cpp"
+#include <min_snap.h>
+#include "min_snap.cpp"
 
-ros::Publisher pos_goal, status;
-MinAccel min_accel;
+ros::Publisher pos_goal, status, wp_viz;
+MinSnap min_snap;
 
 /* -------------------- callbacks -------------------- */
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg)
 {
-  min_accel.setState(*msg);
+  min_snap.setState(msg);
 }
 
-void waypointCallback(const asctec_msgs::MinAccelCmd::ConstPtr& msg)
+void waypointCallback(const asctec_msgs::WaypointCmd::ConstPtr& msg)
 {
-	if(msg->reset) min_accel.resetWaypoints();
-	min_accel.addWaypoint(*msg);
+	if(msg->reset) min_snap.resetWaypoints();
+	if(msg->reset) wp_viz.publish(*min_snap.deleteMarker());
+	min_snap.addWaypoint(msg);
 }
 
 void timerCallback(const ros::TimerEvent& event)
 {
 	std_msgs::Bool temp;
-	temp.data = min_accel.getStatus();
+	temp.data = min_snap.getStatus();
 	status.publish(temp);
-	if(!temp.data) pos_goal.publish(*min_accel.getNextCommand());
+	if(!temp.data) {
+		pos_goal.publish(*min_snap.getNextCommand());
+		wp_viz.publish(*min_snap.getMarker());
+	}
 }
 
 int main(int argc, char** argv) {
-	ros::init(argc, argv, "min_accel");
+	ros::init(argc, argv, "min_snap");
 	ros::NodeHandle nh;
 
 	/* -------------------- roslaunch parameter values -------------------- */
@@ -39,12 +43,13 @@ int main(int argc, char** argv) {
   ros::Timer timer = nh.createTimer(ros::Duration(1/rate), timerCallback);
   pos_goal = nh.advertise<asctec_msgs::PositionCmd>(topic_name + "/position_cmd", 10); 																	// Position goals to linear and nonlinear controllers
   status = nh.advertise<std_msgs::Bool>(topic_name + "/status", 10);							 																			// Trajectory completion status
-  
+  wp_viz = nh.advertise<visualization_msgs::Marker>(topic_name+"/asctec_viz", 10);
+
   ros::Subscriber odom_sub = nh.subscribe(topic_name + "/odom", 1, odomCallback);																				// Odometry data
-  ros::Subscriber wpt_sub = nh.subscribe(topic_name + "/waypoints", 20, waypointCallback);															// Waypoint data
+  ros::Subscriber wpt_sub = nh.subscribe(topic_name + "/waypoints", 100, waypointCallback);															// Waypoint data
 
 	/* -------------------- Min_accel class-------------------- */
-	ROS_INFO("min_accel listening on: %s and %s", (topic_name + "/waypoints").c_str(), (topic_name + "/odom").c_str());
+	ROS_INFO("min_snap listening on: %s and %s", (topic_name + "/waypoints").c_str(), (topic_name + "/odom").c_str());
 	ros::spin();
 
 	return 0;

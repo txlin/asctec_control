@@ -105,9 +105,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES asctec_viz
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
+ LIBRARIES asctec_viz
+ CATKIN_DEPENDS asctec_msgs
+ DEPENDS system_lib
 )
 
 ###########
@@ -116,7 +116,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+include_directories(${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

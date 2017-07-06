@@ -1,8 +1,8 @@
-#include <min_accel.h>
+#include <min_jerk.h>
 
 using Eigen::MatrixXf;
 
-MinAccel::MinAccel()
+MinJerk::MinJerk()
 {
  /* Trajectory class constructor
   * - Holds A, B, X, T matricies
@@ -18,16 +18,27 @@ MinAccel::MinAccel()
 	By = MatrixXf::Zero(6,1);
   Bz = MatrixXf::Zero(6,1);
 	Byaw = MatrixXf::Zero(6,1);
+
+	path_.header.frame_id = odom_.header.frame_id;
+	path_.type = visualization_msgs::Marker::CUBE_LIST;
+	path_.action = visualization_msgs::Marker::ADD;
+	path_.ns = "path_jerk";
+	path_.id = 0;
+	path_.scale.x = 0.0125;
+	path_.scale.y = 0.0125;
+	path_.scale.z = 0.0125;
+	path_.color.a = 0.65;
+	path_.color.r = 1.0;
+	path_.color.b = 0.3;
 }
 
-void MinAccel::addWaypoint(asctec_msgs::MinAccelCmd wp)
+void MinJerk::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
 {
- /* Grab wp from MinAccelCommand msg
+ /* Grab wp from WaypointCmd msg
   * Calculate new X matrix and add to X vector
   * Set init based on if continuing or starting a trajectory
   */
-	if(wp.time == 0){ ROS_INFO("Error: time = 0"); return;}
-
+	if(wp->time == 0){ ROS_INFO("Ignored: time = 0"); return;}
   if(T.size() == 0) {
   	Bx(0,0) = odom_.pose.pose.position.x;
     Bx(2,0) = odom_.twist.twist.linear.x;
@@ -44,6 +55,7 @@ void MinAccel::addWaypoint(asctec_msgs::MinAccelCmd wp)
   	Byaw(0,0) = odom_.pose.pose.orientation.z;
     Byaw(2,0) = odom_.twist.twist.angular.z;
     Byaw(4,0) = 0.0;
+
     t0 = ros::Time::now();
 
   }else {
@@ -64,26 +76,26 @@ void MinAccel::addWaypoint(asctec_msgs::MinAccelCmd wp)
     Byaw(4,0) = Byaw(5,0);
 
   }
-  Bx(1,0) = wp.position.x;
-  Bx(3,0) = wp.velocity.x;
-  Bx(5,0) = wp.accel.x;
+  Bx(1,0) = wp->position.x;
+  Bx(3,0) = wp->velocity.x;
+  Bx(5,0) = wp->accel.x;
     
-  By(1,0) = wp.position.y;
-  By(3,0) = wp.velocity.y;
-  By(5,0) = wp.accel.y;
+  By(1,0) = wp->position.y;
+  By(3,0) = wp->velocity.y;
+  By(5,0) = wp->accel.y;
     
-  Bz(1,0) = wp.position.z;
-  Bz(3,0) = wp.velocity.z;
-  Bz(5,0) = wp.accel.z;
+  Bz(1,0) = wp->position.z;
+  Bz(3,0) = wp->velocity.z;
+  Bz(5,0) = wp->accel.z;
     
-  Byaw(1,0) = wp.yaw[0];
-  Byaw(3,0) = wp.yaw[1];
-  Byaw(5,0) = wp.yaw[2];
+  Byaw(1,0) = wp->yaw[0];
+  Byaw(3,0) = wp->yaw[1];
+  Byaw(5,0) = wp->yaw[2];
 
 	for(int i=5; i>=0; i--) {
-		A(1,5-i) = pow(wp.time,i);
-		A(3,5-i) = i*pow(wp.time,i-1);
-		A(5,5-i) = i*(i-1)*pow(wp.time,i-2);
+		A(1,5-i) = pow(wp->time,i);
+		A(3,5-i) = i*pow(wp->time,i-1);
+		A(5,5-i) = i*(i-1)*pow(wp->time,i-2);
 	}
 
   MatrixXf * x = new MatrixXf;
@@ -102,32 +114,60 @@ void MinAccel::addWaypoint(asctec_msgs::MinAccelCmd wp)
 	*yaw = A.colPivHouseholderQr().solve(Byaw);
 	Xyaw.push_back(yaw);
 
-  T.push_back(wp.time);
+  T.push_back(wp->time);
 }
 
-void MinAccel::setState(nav_msgs::Odometry odom) {
-  odom_ = odom;
+void MinJerk::setState(const nav_msgs::Odometry::ConstPtr& odom) {
+  odom_ = *odom;
 }
 
-bool MinAccel::getStatus(void) {
+bool MinJerk::getStatus(void) {
 	return T.size() == 0;
 }
 
-void MinAccel::resetWaypoints(void) {
-	if(T.size() == 0){ ROS_INFO("Waypoint List Empty"); return;}
-	delete Xx.front();
-	delete Xy.front();
-	delete Xz.front();
-	delete Xyaw.front();
-
-  T.erase(T.begin());
-  Xx.erase(Xx.begin());
-  Xy.erase(Xy.begin());
-  Xz.erase(Xz.begin());
-  Xyaw.erase(Xyaw.begin());
+visualization_msgs::Marker *MinJerk::deleteMarker(void) {
+	path_.points.clear();
+	path_.action = 3;
+	return &path_;
 }
 
-asctec_msgs::PositionCmd* MinAccel::getNextCommand(void) {  		
+visualization_msgs::Marker *MinJerk::getMarker(void) {
+	double ts = ros::Time::now().toSec() - t0.toSec();
+	if(ts >= T.front()) ts = T.front();
+	path_.points.clear();
+	for(double t=ts; t<T.front(); t+=0.1) {
+		geometry_msgs::Point p;
+		for(int i=5; i>=0; i--) {
+		  p.x += Xx.front()->operator()(5-i,0)*pow(t,i);
+		  p.y += Xy.front()->operator()(5-i,0)*pow(t,i);
+		  p.z += Xz.front()->operator()(5-i,0)*pow(t,i);
+		}
+		path_.points.push_back(p);
+	}
+	path_.action = visualization_msgs::Marker::ADD;
+	path_.lifetime = ros::Duration(T.front());
+	path_.header.frame_id = odom_.header.frame_id;
+	path_.header.stamp = ros::Time::now();
+	return &path_;
+}
+
+void MinJerk::resetWaypoints(void) {
+	if(T.size() == 0) return;
+	ROS_INFO("Clearing %i waypoints...", int(T.size()));
+
+	for (std::vector<MatrixXf *>::iterator i = Xx.begin() ; i != Xx.end(); ++i) delete *i;
+	for (std::vector<MatrixXf *>::iterator i = Xy.begin() ; i != Xy.end(); ++i) delete *i;
+	for (std::vector<MatrixXf *>::iterator i = Xz.begin() ; i != Xz.end(); ++i) delete *i;
+	for (std::vector<MatrixXf *>::iterator i = Xyaw.begin() ; i != Xyaw.end(); ++i) delete *i;
+
+  Xx.clear();
+  Xy.clear();
+  Xz.clear();
+  Xyaw.clear();
+  T.clear();
+}
+
+asctec_msgs::PositionCmd* MinJerk::getNextCommand(void) {  		
   if(T.size() != 0) {
   	double t = ros::Time::now().toSec() - t0.toSec();
     if(t >= T.front()) {
@@ -165,6 +205,7 @@ asctec_msgs::PositionCmd* MinAccel::getNextCommand(void) {
         cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(5-i,0)*pow(t,i-2);
 
       }
+			//cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
       cmd_ = cmd;
     }
   }
