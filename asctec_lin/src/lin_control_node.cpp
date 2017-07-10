@@ -31,7 +31,7 @@ void publishTRPYCommand(void)
   trpy_command.thrust = std::min(double(trpy(0)),MAX_THRUST)/MAX_THRUST;
   trpy_command.roll   = std::min(MAX_ANGLE,std::max(-MAX_ANGLE,trpy(1)));
   trpy_command.pitch  = std::min(MAX_ANGLE,std::max(-MAX_ANGLE,-trpy(2)));
-  trpy_command.yaw    = -trpy(3);
+  trpy_command.yaw    = trpy(3);
   trpy_command.cmd[0] = trpy_command.cmd[1] = trpy_command.cmd[2] = trpy_command.cmd[3] = true;
   trpy_command_pub_.publish(trpy_command);
 

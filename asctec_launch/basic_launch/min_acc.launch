@@ -1,5 +1,4 @@
 <launch>
-
 	<arg name="group_ns" default="asctec" />
   <arg name="port" default="/dev/ttyUSB0" />
   <arg name="frame" default="/vicon/hummingbird_1/hummingbird_1" />
