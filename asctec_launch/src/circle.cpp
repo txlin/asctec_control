@@ -59,16 +59,12 @@ void timerCallback(const ros::TimerEvent& event)
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "circley");
 	ros::NodeHandle nh;
-
-	/* -------------------- roslaunch parameter values -------------------- */
-  std::string topic;
-  ros::param::get("~topic", topic);
   
 	/* -------------------- Publishers, and Subscribers -------------------- */
 	timer = nh.createTimer(ros::Duration((tV+2*tA)/2), timerCallback);
 	timer.stop();
-  waypoints = nh.advertise<asctec_msgs::WaypointCmd>(topic + "/waypoints", 10); 					// Position goals to linear and nonlinear controllers
-  ros::Subscriber status = nh.subscribe(topic + "/status", 1, statusCallback);						// Trajectory completion status
+  waypoints = nh.advertise<asctec_msgs::WaypointCmd>(ros::this_node::getNamespace()+"/waypoints", 10); 					// Position goals to linear and nonlinear controllers
+  ros::Subscriber status = nh.subscribe(ros::this_node::getNamespace()+"/status", 1, statusCallback);						// Trajectory completion status
 
 	ros::Duration(2.0).sleep();
 	waypoint.header.stamp = ros::Time::now();
@@ -76,7 +72,7 @@ int main(int argc, char** argv) {
 	waypoint.time = 3.0;
 	waypoints.publish(waypoint);
 	waypoint.time = maxV/D+2*tA;
-	ROS_INFO("Publishing to %s", (topic + "/waypoints").c_str());
+
 	ros::spin();
 	return 0;
 }

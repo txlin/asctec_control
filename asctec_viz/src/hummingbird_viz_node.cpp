@@ -18,12 +18,10 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "mesh_visualization");
   ros::NodeHandle nh;
 
-	std::string topic = "asctec_so3_control";
 	ros::param::get("~mesh_resource", mesh_resource);
-	ros::param::get("~topic", topic);
 
-  ros::Subscriber odom_sub = nh.subscribe(topic+"/odom", 10, odomCallback);
-  pub_vis = nh.advertise<visualization_msgs::Marker>(topic+"/asctec_viz", 10);
+  ros::Subscriber odom_sub = nh.subscribe(ros::this_node::getNamespace()+"/odom", 10, odomCallback);
+  pub_vis = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/asctec_viz", 10);
 
 	marker_quad.type = visualization_msgs::Marker::MESH_RESOURCE;
 	marker_quad.color.a = 0.7;
@@ -36,6 +34,7 @@ int main(int argc, char **argv)
 	marker_quad.ns = "hbird_mesh";
 	marker_quad.id = 0;
 	marker_quad.mesh_resource = mesh_resource;
+
   ros::spin();
   return 0;
 }

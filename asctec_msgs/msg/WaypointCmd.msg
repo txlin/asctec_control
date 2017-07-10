@@ -6,4 +6,6 @@ geometry_msgs/Vector3 jerk
 geometry_msgs/Vector3 snap
 float64[3] yaw
 float64 time
+float64 desV
+float64 desA
 bool reset

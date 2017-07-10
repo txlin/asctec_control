@@ -40,7 +40,7 @@ MinSnap::MinSnap()
 	path_.scale.z = 0.0125;
 	path_.color.a = 0.65;
 	path_.color.g = 1.0;
-	path_.color.r = 1.0;
+	path_.color.b = 1.0;
 }
 
 void MinSnap::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
@@ -49,7 +49,9 @@ void MinSnap::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
   * Calculate new X matrix and add to X vector
   * Set init based on continuing or starting a trajectory
   */
-	if(wp->time == 0){ ROS_INFO("Ignored: time = 0"); return;}
+	if(!wp->time && (!wp->desV || !wp->desA)) { ROS_INFO("Ignored: Time = 0 and no decision parameters set"); return;}
+	float time = wp->time;
+	if(!time) time = setTime(wp, wp->desV, wp->desA);
   if(T.size() == 0) {
   	Bx(0,0) = odom_.pose.pose.position.x;
     Bx(2,0) = odom_.twist.twist.linear.x;
@@ -115,10 +117,10 @@ void MinSnap::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
   Byaw(5,0) = wp->yaw[2];
 
 	for(int i=7; i>=0; i--) {
-		A(1,7-i) = pow(wp->time,i);
-		A(3,7-i) = i*pow(wp->time,i-1);
-		A(5,7-i) = i*(i-1)*pow(wp->time,i-2);
-		A(7,7-i) = i*(i-2)*pow(wp->time,i-3);
+		A(1,7-i) = pow(time,i);
+		A(3,7-i) = i*pow(time,i-1);
+		A(5,7-i) = i*(i-1)*pow(time,i-2);
+		A(7,7-i) = i*(i-2)*pow(time,i-3);
 	}
 
   MatrixXf * x = new MatrixXf;
@@ -137,7 +139,7 @@ void MinSnap::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
 	*yaw = A.colPivHouseholderQr().solve(Byaw);
 	Xyaw.push_back(yaw);
 
-  T.push_back(wp->time);
+  T.push_back(time);
 }
 
 void MinSnap::setState(const nav_msgs::Odometry::ConstPtr& odom) {
@@ -146,6 +148,13 @@ void MinSnap::setState(const nav_msgs::Odometry::ConstPtr& odom) {
 
 bool MinSnap::getStatus(void) {
 	return T.size() == 0;
+}
+
+float MinSnap::setTime(const asctec_msgs::WaypointCmd::ConstPtr& cmd, float desV, float desA) {
+	float tA0 = std::sqrt(std::pow((odom_.twist.twist.linear.x - desV)/desA,2)+std::pow((odom_.twist.twist.linear.y - desV)/desA,2));
+	float tAf = std::sqrt(std::pow((cmd->velocity.x - desV)/desA,2)+std::pow((cmd->velocity.y - desV)/desA,2));
+	float tD = std::sqrt(std::pow(cmd->position.x-odom_.pose.pose.position.x,2)+std::pow(cmd->position.y-odom_.pose.pose.position.y,2))/desV;
+	return tD+tA0+tAf;
 }
 
 visualization_msgs::Marker *MinSnap::deleteMarker(void) {

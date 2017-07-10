@@ -268,17 +268,16 @@ int main(int argc, char** argv) {
 	ros::NodeHandle nh;
 	ros::Rate loop_rate = freq;
 	
-	ros::param::get("~topic", topic);
-	ros::param::get("~w_frame", world);
-	ros::param::get("~ugv_odom", ugv);
+	ros::param::get("~world", world);
+	ros::param::get("~ugv_topic", ugv);
 
-	wpt_pub = nh.advertise<asctec_msgs::WaypointCmd>(topic + "/waypoints", 10);
-	pos_pub = nh.advertise<asctec_msgs::PositionCmd>(topic + "/position_cmd", 10);
-	border_pub = nh.advertise<visualization_msgs::Marker>(topic + "/border", 10);
+	wpt_pub = nh.advertise<asctec_msgs::WaypointCmd>(ros::this_node::getNamespace()+"/waypoints", 10);
+	pos_pub = nh.advertise<asctec_msgs::PositionCmd>(ros::this_node::getNamespace()+"/position_cmd", 10);
+	border_pub = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/border", 10);
 
-	status_sub = nh.subscribe(topic + "/status", 10, statusCallback);
+	status_sub = nh.subscribe(ros::this_node::getNamespace()+"/status", 10, statusCallback);
 	joy_sub = nh.subscribe("/joy", 10, joyCallback);
-	quad_sub = nh.subscribe(topic + "/odom", 10, quadCallback);
+	quad_sub = nh.subscribe(ros::this_node::getNamespace()+"/odom", 10, quadCallback);
 	ugv_sub = nh.subscribe(ugv, 10, ugvCallback);
 
 	ROS_INFO("Running: UGV Tracker");
@@ -325,7 +324,7 @@ int main(int argc, char** argv) {
 					float tTravel = sqrt(pow((xNew - odom_quad_.pose.pose.position.x),2) + pow((yNew - odom_quad_.pose.pose.position.y),2)) / maxV;
 	
 					tTravel = limit(tTravel, 10, 1);
-					sendTrajectory(tTravel, xNew, yNew, 1.0, 0.0);		//Yaw controller needs to be tuned!!
+					sendTrajectory(tTravel, xNew, yNew, 1.0, 0.0);																		//Yaw controller needs to be tuned!!
 
 					ROS_INFO("Begin tracking of UGV");
 					state = 3;
@@ -345,7 +344,7 @@ int main(int argc, char** argv) {
 						vyNew = odom_ugv_.twist.twist.linear.y;
 					}
 					float yawNew = limit(odom_ugv_.pose.pose.orientation.z, M_PI, -M_PI);
-					sendPoint(xNew, yNew, vxNew, vyNew, 1.0, 0.0);										//Yaw controller needs to be tuned!!
+					sendPoint(xNew, yNew, vxNew, vyNew, 1.0, 0.0);																			//Yaw controller needs to be tuned!!
 				}
 
 				//Check exit conditions

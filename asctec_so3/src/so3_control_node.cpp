@@ -48,12 +48,11 @@ void publishSO3Command(void)
   }
   si_command.roll = roll;
   si_command.pitch = -pitch;
-  si_command.yaw = ky*(current_yaw-des_yaw);
-  
+  si_command.yaw = yaw;
   si_cmd_pub.publish(si_command);
 }
 
-void position_cmd_callback(const asctec_msgs::PositionCmd::ConstPtr &cmd)
+void position_cmd_callback(const asctec_msgs::PositionCmd::ConstPtr& cmd)
 {
 	if(position_cmd_init) {
 		des_pos = Eigen::Vector3d(cmd->position.x, cmd->position.y, cmd->position.z);
@@ -67,7 +66,7 @@ void position_cmd_callback(const asctec_msgs::PositionCmd::ConstPtr &cmd)
 	}
 }
 
-void odom_callback(const nav_msgs::Odometry::ConstPtr &odom)
+void odom_callback(const nav_msgs::Odometry::ConstPtr& odom)
 {
   const Eigen::Vector3d position(odom->pose.pose.position.x,
                                  odom->pose.pose.position.y,
@@ -98,7 +97,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr &odom)
 	position_cmd_updated = false;
 }
 
-void enable_motors_callback(const std_msgs::Bool::ConstPtr &msg)
+void enable_motors_callback(const std_msgs::Bool::ConstPtr& msg)
 {
   if(msg->data)
     ROS_INFO("Enabling motors");
@@ -134,15 +133,11 @@ int main(int argc, char **argv)
   kv(2) = kv_list[2];   
 //  ky(1) = ky_list[1];  
 
-  ros::Subscriber odom_sub = n.subscribe("odom", 10, &odom_callback,
-                                         ros::TransportHints().tcpNoDelay());
-  ros::Subscriber position_cmd_sub = n.subscribe("position_cmd", 10, &position_cmd_callback,
-                                                 ros::TransportHints().tcpNoDelay());
+  ros::Subscriber odom_sub = n.subscribe(ros::this_node::getNamespace()+"/odom", 10, odom_callback);
+  ros::Subscriber position_cmd_sub = n.subscribe(ros::this_node::getNamespace()+"/position_cmd", 10, position_cmd_callback);
 
-  ros::Subscriber enable_motors_sub = n.subscribe("motors", 2, &enable_motors_callback,
-                                                  ros::TransportHints().tcpNoDelay());
-
-  si_cmd_pub = n.advertise<asctec_msgs::SICmd>("si_command", 10);
+  ros::Subscriber enable_motors_sub = n.subscribe(ros::this_node::getNamespace()+"/motors", 2, enable_motors_callback);
+  si_cmd_pub = n.advertise<asctec_msgs::SICmd>(ros::this_node::getNamespace()+"/cmd_si", 10);
   ros::spin();
 
   return 0;

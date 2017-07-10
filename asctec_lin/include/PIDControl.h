@@ -23,7 +23,8 @@ class PIDControl
                         const Eigen::Vector3d &kx,
                         const Eigen::Vector3d &kv,
                         const Eigen::Vector3d &ki,
-                        const double ki_yaw);
+                        const double ki_yaw,
+												const double k_yaw);
                   
 
   const Eigen::Vector4d &getControls(void);

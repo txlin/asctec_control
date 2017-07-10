@@ -34,23 +34,17 @@ int main(int argc, char** argv) {
 
 	/* -------------------- roslaunch parameter values -------------------- */
 	float rate = 20;
-  std::string topic_name;
-  
   ros::param::get("~rate", rate);
-  ros::param::get("~topic_name", topic_name);
   
 	/* -------------------- Timer, Publishers, and Subscribers -------------------- */
   ros::Timer timer = nh.createTimer(ros::Duration(1/rate), timerCallback);
-  pos_goal = nh.advertise<asctec_msgs::PositionCmd>(topic_name + "/position_cmd", 10); 																	// Position goals to linear and nonlinear controllers
-  status = nh.advertise<std_msgs::Bool>(topic_name + "/status", 10);							 																			// Trajectory completion status
-  wp_viz = nh.advertise<visualization_msgs::Marker>(topic_name+"/asctec_viz", 10);
+  pos_goal = nh.advertise<asctec_msgs::PositionCmd>(ros::this_node::getNamespace()+"/position_cmd", 10); 																	// Position goals to linear and nonlinear controllers
+  status = nh.advertise<std_msgs::Bool>(ros::this_node::getNamespace()+"/status", 10);							 																			// Trajectory completion status
+  wp_viz = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/asctec_viz", 10);
 
-  ros::Subscriber odom_sub = nh.subscribe(topic_name + "/odom", 10, odomCallback);																				// Odometry data
-  ros::Subscriber wpt_sub = nh.subscribe(topic_name + "/waypoints", 100, waypointCallback);															// Waypoint data
+  ros::Subscriber odom_sub = nh.subscribe(ros::this_node::getNamespace()+"/odom", 10, odomCallback);																				// Odometry data
+  ros::Subscriber wpt_sub = nh.subscribe(ros::this_node::getNamespace()+"/waypoints", 100, waypointCallback);															// Waypoint data
 
-	/* -------------------- min_jerk class-------------------- */
-	ROS_INFO("min_jerk listening on: %s and %s", (topic_name + "/waypoints").c_str(), (topic_name + "/odom").c_str());
 	ros::spin();
-
 	return 0;
 }

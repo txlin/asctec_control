@@ -1,82 +1,20 @@
 <launch>
+	<arg name="group_ns" value="asctec" />
+	<arg name="sim" value="true"/>
 
-  <arg name="port" value="/dev/ttyUSB0" />
-  <arg name="q_name" value="hummingbird" />
-  <arg name="controller" value="asctec" />
-  <arg name="q_frame" value="/vicon/hummingbird_1/hummingbird_1" />
-  <arg name="w_frame" value="/odom" />
-	<arg name="rviz" value="basic.rviz"/>
-	<arg name="mesh" value="package://mesh_visualization/meshes/hummingbird.mesh"/>
-	<arg name="dummy" value="true"/>
+	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
 
-  <include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg dummy)"/>
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find asctec_viz)/rviz/$(arg rviz)" />
+	<group ns="$(arg group_ns)">
+		<include file="$(find asctec_launch)/basic_launch/min_snap.launch">
+        <arg name="group_ns" value="$(arg group_ns)" /> 
+        <arg name="sim" value="$(arg sim)" /> 
+    </include>
 
-	<node pkg="asctec_viz"
-		type="asctec_viz_node"
-		name="asctec_viz"
-		output="screen">
-		<param name="topic_name" value="$(arg controller)"/>
-	</node>
+		<node pkg="asctec_launch"
+			type="circle_node"
+			name="circley"
+			output="screen">
+		</node>
 
-  <node pkg="asctec_so3"
-    type="asctec_control_node"
-    name="$(arg controller)"
-    required="true"
-    output="screen">
-    <param name="mass" value="0.55"/>
-    <rosparam param="gains/pos">[3, 3, 8.2]</rosparam>
-    <rosparam param="gains/vel">[3, 3, 4.5]</rosparam>
-		<rosparam param="gains/yaw">0.8</rosparam>
-  </node>
-
-  <node pkg="trajectory_gen"
-    type="min_snap_node"
-    name="min_snap"
-    required="true"
-    output="screen">
-    <param name="rate" value="40"/>
-    <param name="topic_name" value="$(arg controller)"/>
-  </node>
-
-  <node pkg="asctec_ll_updated" name="$(arg q_name)" type="asctec_ll_updated_node" output="screen">
-     <param name="port" value="$(arg port)"/>
-     <param name="ll_status_rate" value="1"/>
-     <param name="imu_calc_data_rate" value="0"/>
-     <param name="rc_data_rate" value="0"/>
-     <param name="ctrl_out_rate" value="10"/>
-     <param name="gps_data_advanced_rate" value="0"/>
-     <remap from="~cmd_si" to="/asctec_so3_control/si_command" />
-  </node>
-
-	<node pkg="asctec_launch"
-		type="dummy_odom_node"
-		name="dummy_odom"
-		required="true"
-		output="screen" 
-		if="$(arg dummy)">
-		<param name="rate" value="40"/>
-		<param name="q_name" value="$(arg controller)"/>
-		<param name="q_frame" value="$(arg q_frame)"/>
-		<param name="w_frame" value="$(arg w_frame)"/>
-		<param name="track" value="true"/>
-	</node>
-
-	<node pkg="asctec_launch"
-		type="asctec_vicon_node"
-		name="asctec_vicon"
-		required="true"
-		output="screen">
-		<param name="q_name" value="$(arg controller)"/>
-		<param name="q_frame" value="$(arg q_frame)"/>
-		<param name="w_frame" value="$(arg w_frame)"/>
-	</node>
-
-	<node pkg="asctec_launch"
-		type="circle_node"
-		name="circley"
-		output="screen">
-		<param name="topic" value="$(arg controller)"/>
-	</node>
-
+	</group>
 </launch>

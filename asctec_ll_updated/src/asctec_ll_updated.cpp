@@ -320,7 +320,7 @@ int main(int argc, char** argv)
   if (ll_status_rate > 0)
     {
       ll_status_pub =
-        n.advertise<asctec_ll_updated::LLStatus>("ll_status", 1, true);
+        n.advertise<asctec_ll_updated::LLStatus>(ros::this_node::getNamespace()+"/ll_status", 1, true);
       asctec_ll_interface.SetLLStatusCallback(ll_status_callback);
     }
 
@@ -330,7 +330,7 @@ int main(int argc, char** argv)
   if (imu_raw_data_rate > 0)
     {
       imu_raw_data_pub =
-        n.advertise<asctec_ll_updated::IMURawData>("imu_raw_data", 1);
+        n.advertise<asctec_ll_updated::IMURawData>(ros::this_node::getNamespace()+"/imu_raw_data", 1);
       asctec_ll_interface.SetIMURawDataCallback(imu_raw_data_callback);
     }
 
@@ -340,7 +340,7 @@ int main(int argc, char** argv)
   if (imu_calc_data_rate > 0)
     {
       imu_calc_data_pub =
-        n.advertise<asctec_ll_updated::IMUCalcData>("imu_calc_data", 1);
+        n.advertise<asctec_ll_updated::IMUCalcData>(ros::this_node::getNamespace()+"/imu_calc_data", 1);
       asctec_ll_interface.SetIMUCalcDataCallback(imu_calc_data_callback);
     }
 
@@ -350,7 +350,7 @@ int main(int argc, char** argv)
   if (rc_data_rate > 0)
     {
       rc_data_pub =
-        n.advertise<asctec_ll_updated::RCData>("rc_data", 1);
+        n.advertise<asctec_ll_updated::RCData>(ros::this_node::getNamespace()+"/rc_data", 1);
       asctec_ll_interface.SetRCDataCallback(rc_data_callback);
     }
 
@@ -360,7 +360,7 @@ int main(int argc, char** argv)
   if (ctrl_out_rate > 0)
     {
       ctrl_out_pub =
-        n.advertise<asctec_ll_updated::CTRLOut>("ctrl_out", 1);
+        n.advertise<asctec_ll_updated::CTRLOut>(ros::this_node::getNamespace()+"/ctrl_out", 1);
       asctec_ll_interface.SetCTRLOutCallback(ctrl_out_callback);
     }
 
@@ -370,7 +370,7 @@ int main(int argc, char** argv)
   if (gps_data_rate > 0)
     {
       gps_data_pub =
-        n.advertise<asctec_ll_updated::GPSData>("gps_data", 1);
+        n.advertise<asctec_ll_updated::GPSData>(ros::this_node::getNamespace()+"/gps_data", 1);
       asctec_ll_interface.SetGPSDataCallback(gps_data_callback);
     }
 
@@ -380,7 +380,7 @@ int main(int argc, char** argv)
   if (gps_data_advanced_rate > 0)
     {
       gps_data_advanced_pub =
-        n.advertise<asctec_ll_updated::GPSDataAdvanced>("gps_data_advanced", 1);
+        n.advertise<asctec_ll_updated::GPSDataAdvanced>(ros::this_node::getNamespace()+"/gps_data_advanced", 1);
       asctec_ll_interface.SetGPSDataAdvancedCallback(gps_data_advanced_callback);
     }
 
@@ -395,7 +395,7 @@ int main(int argc, char** argv)
       return -1;
     }
 
-  ros::Subscriber cmd_sub = n.subscribe("cmd_si", 1, cmd_si_callback);
+  ros::Subscriber cmd_sub = n.subscribe(ros::this_node::getNamespace()+"/cmd_si", 1, cmd_si_callback);
   ros::Timer timer = n.createTimer(ros::Duration(1.0/cmd_rate), cmd_callback);
 
   while (n.ok())

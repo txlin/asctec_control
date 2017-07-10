@@ -140,7 +140,8 @@ include_directories(
 add_executable(asctec_vicon_node src/vicon_odom.cpp)
 add_executable(dummy_odom_node src/dummy_odom.cpp)
 add_executable(ugv_vicon_node src/ugv_vicon_odom.cpp)
-add_executable(speed_test_node src/speed_test.cpp)
+add_executable(hover_node src/hover.cpp)
+add_executable(step_node src/step_test.cpp)
 add_executable(nl_wand_node src/wand_demo.cpp)
 add_executable(nl_track_node src/ugv.cpp)
 add_executable(square_node src/square.cpp)
@@ -160,7 +161,8 @@ add_executable(aggressive_node src/aggressive.cpp)
 add_dependencies(asctec_vicon_node so3_control_generate_messages_cpp)
 add_dependencies(dummy_odom_node so3_control_generate_messages_cpp)
 add_dependencies(ugv_vicon_node so3_control_generate_messages_cpp)
-add_dependencies(speed_test_node so3_control_generate_messages_cpp)
+add_dependencies(hover_node so3_control_generate_messages_cpp)
+add_dependencies(step_node so3_control_generate_messages_cpp)
 add_dependencies(nl_wand_node so3_control_generate_messages_cpp)
 add_dependencies(nl_track_node so3_control_generate_messages_cpp)
 add_dependencies(square_node so3_control_generate_messages_cpp)
@@ -181,7 +183,10 @@ target_link_libraries(dummy_odom_node
 target_link_libraries(ugv_vicon_node
   ${catkin_LIBRARIES}
 )
-target_link_libraries(speed_test_node
+target_link_libraries(hover_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(step_node
   ${catkin_LIBRARIES}
 )
 target_link_libraries(nl_wand_node

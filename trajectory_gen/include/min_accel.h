@@ -26,6 +26,7 @@ class MinAccel
 		void setState(const nav_msgs::Odometry::ConstPtr& odom);
 		visualization_msgs::Marker *getMarker(void);
 		visualization_msgs::Marker *deleteMarker(void);
+		float setTime(const asctec_msgs::WaypointCmd::ConstPtr& cmd, float desV, float desA);
 		void addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp);
 		void resetWaypoints(void);
 		bool getStatus(void);

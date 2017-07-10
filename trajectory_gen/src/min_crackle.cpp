@@ -43,7 +43,7 @@ MinCrackle::MinCrackle()
 	path_.scale.z = 0.0125;
 	path_.color.a = 0.65;
 	path_.color.g = 1.0;
-	path_.color.b = 1.0;
+	path_.color.r = 1.0;
 }
 
 void MinCrackle::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)

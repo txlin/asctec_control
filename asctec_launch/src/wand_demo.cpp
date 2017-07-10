@@ -41,7 +41,7 @@
 int state = 0;
 bool isDone = true;
 
-std::string world, quad_name, wand_frame, topic;
+std::string world, wand;
 nav_msgs::Odometry odom_;
 asctec_msgs::SICmd nl_cmd;
 
@@ -431,25 +431,23 @@ int main(int argc, char** argv) {
 	ros::NodeHandle nh;
 	ros::Rate loop_rate = freq;
 
-	ros::param::get("~q_name", quad_name);
-	ros::param::get("~wand_frame", wand_frame);
-	ros::param::get("~w_frame", world);
-	ros::param::get("~topic_name", topic);
+	ros::param::get("~wand", wand);
+	ros::param::get("~world", world);
 
-	si_pub = nh.advertise<asctec_msgs::SICmd>(topic + "/si_remap", 10);
-	cmd_pub = nh.advertise<asctec_msgs::PositionCmd>(topic + "/position_cmd", 10);
+	si_pub = nh.advertise<asctec_msgs::SICmd>(ros::this_node::getNamespace()+"/si_remap", 10);
+	cmd_pub = nh.advertise<asctec_msgs::PositionCmd>(ros::this_node::getNamespace()+"/position_cmd", 10);
 
-	wpt_pub = nh.advertise<asctec_msgs::WaypointCmd>(topic + "/waypoints", 10);
-	border_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/border", 10);
-	sborder_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/soft_border", 10);
+	wpt_pub = nh.advertise<asctec_msgs::WaypointCmd>(ros::this_node::getNamespace()+"/waypoints", 10);
+	border_pub = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/border", 10);
+	sborder_pub = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/soft_border", 10);
 
-	si_sub = nh.subscribe(topic + "/si_command", 1, siCallback);
-	status_sub = nh.subscribe(topic + "/status", 10, statusCallback);
-	odom_sub = nh.subscribe(topic + "/odom", 10, odomCallback);
+	si_sub = nh.subscribe(ros::this_node::getNamespace()+"/cmd_si", 1, siCallback);
+	status_sub = nh.subscribe(ros::this_node::getNamespace()+"/status", 10, statusCallback);
+	odom_sub = nh.subscribe(ros::this_node::getNamespace()+"/odom", 10, odomCallback);
 
 	tf::TransformListener listener;	
 	tf::StampedTransform transform;
-	listener.waitForTransform(world, wand_frame, ros::Time(0), ros::Duration(3.0));
+	listener.waitForTransform(world, wand, ros::Time(0), ros::Duration(3.0));
 	ros::Duration(1.0).sleep();
 
 	ROS_INFO("Running: Wand Listener");
@@ -459,7 +457,7 @@ int main(int argc, char** argv) {
 		showBorder(outBorder(), BORDER_TOP);
 		showSBorder(outSBorder(), BORDER_TOP);
 
-		listener.lookupTransform(world, wand_frame, ros::Time(0), transform);
+		listener.lookupTransform(world, wand, ros::Time(0), transform);
     asctec_msgs::SICmd new_cmd = nl_cmd;
     
 		switch(state) {

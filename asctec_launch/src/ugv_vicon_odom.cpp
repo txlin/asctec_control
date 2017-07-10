@@ -48,7 +48,6 @@ int main(int argc, char **argv)
 	odom.pose.pose.position.y = transform.getOrigin().y();
 	odom.pose.pose.position.z = transform.getOrigin().z();
 	past = transform.stamp_;
-	ROS_INFO("Broadcasting %s odom from vicon...", ugv_name.c_str());
 	
 	ros::spin();
 	return 0;

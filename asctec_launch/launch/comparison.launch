@@ -1,194 +1,51 @@
 <launch>
+	<arg name="group_acc" value="asctec_acc" />
+	<arg name="group_jerk" value="asctec_jerk" />
+	<arg name="group_snap" value="asctec_snap" />
+	<arg name="sim" value="true"/>
 
-  <arg name="q_name" value="hummingbird" />
-  <arg name="controller" value="asctec" />
-  <arg name="q_frame" value="/vicon/hummingbird_1/hummingbird_1" />
-  <arg name="q_name2" value="hummingbird2" />
-  <arg name="controller2" value="asctec2" />
-  <arg name="q_frame2" value="/vicon/hummingbird_2/hummingbird_2" />
-  <arg name="q_name3" value="hummingbird3" />
-  <arg name="controller3" value="asctec3" />
-  <arg name="q_frame3" value="/vicon/hummingbird_3/hummingbird_3" />
-  <arg name="q_name4" value="hummingbird4" />
-  <arg name="controller4" value="asctec4" />
-  <arg name="q_frame4" value="/vicon/hummingbird_4/hummingbird_4" />
+	<group ns="$(arg group_acc)">
+		<include file="$(find asctec_launch)/basic_launch/min_acc.launch">
+        <arg name="group_ns" value="$(arg group_acc)" /> 
+        <arg name="frame" value="/hummingbird_1" /> 
+        <arg name="sim" value="$(arg sim)" /> 
+    </include>
 
-  <arg name="w_frame" value="/odom" />
-	<arg name="rviz" value="basic.rviz"/>
-	<arg name="mesh" value="package://mesh_visualization/meshes/hummingbird.mesh"/>
-	<arg name="dummy" value="true"/>
+		<node pkg="asctec_launch"
+			type="aggressive_node"
+			name="aggressive"
+			output="screen">
+		</node>
+	</group>
 
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find asctec_viz)/rviz/$(arg rviz)" />
+	<group ns="$(arg group_jerk)">
+		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
+        <arg name="group_ns" value="$(arg group_jerk)" /> 
+        <arg name="frame" value="/hummingbird_2" /> 
+        <arg name="sim" value="$(arg sim)" /> 
+        <arg name="viz" value="false" /> 
+    </include>
 
-	<node pkg="asctec_viz"
-		type="asctec_viz_node"
-		name="asctec_viz"
-		output="screen">
-		<param name="topic_name" value="$(arg controller)"/>
-	</node>
+		<node pkg="asctec_launch"
+			type="aggressive_node"
+			name="aggressive"
+			output="screen">
+		</node>
+	</group>
 
-	<node pkg="asctec_viz"
-		type="asctec_viz_node"
-		name="asctec_viz2"
-		output="screen">
-		<param name="topic_name" value="$(arg controller2)"/>
-	</node>
+	<group ns="$(arg group_snap)">
+		<include file="$(find asctec_launch)/basic_launch/min_snap.launch">
+        <arg name="group_ns" value="$(arg group_snap)" /> 
+        <arg name="frame" value="/hummingbird_3" />  
+        <arg name="sim" value="$(arg sim)" />
+        <arg name="viz" value="false" /> 
+    </include>
 
-	<node pkg="asctec_viz"
-		type="asctec_viz_node"
-		name="asctec_viz3"
-		output="screen">
-		<param name="topic_name" value="$(arg controller3)"/>
-	</node>
-
-  <node pkg="asctec_so3"
-    type="asctec_control_node"
-    name="$(arg controller)"
-    required="true"
-    output="screen">
-    <param name="mass" value="0.55"/>
-    <rosparam param="gains/pos">[3, 3, 8.2]</rosparam>
-    <rosparam param="gains/vel">[3, 3, 4.5]</rosparam>
-		<rosparam param="gains/yaw">0.8</rosparam>
-  </node>
-
-  <node pkg="asctec_so3"
-    type="asctec_control_node"
-    name="$(arg controller2)"
-    required="true"
-    output="screen">
-    <param name="mass" value="0.55"/>
-    <rosparam param="gains/pos">[3, 3, 8.2]</rosparam>
-    <rosparam param="gains/vel">[3, 3, 4.5]</rosparam>
-		<rosparam param="gains/yaw">0.8</rosparam>
-  </node>
-
-  <node pkg="asctec_so3"
-    type="asctec_control_node"
-    name="$(arg controller3)"
-    required="true"
-    output="screen">
-    <param name="mass" value="0.55"/>
-    <rosparam param="gains/pos">[3, 3, 8.2]</rosparam>
-    <rosparam param="gains/vel">[3, 3, 4.5]</rosparam>
-		<rosparam param="gains/yaw">0.8</rosparam>
-  </node>
-
-  <node pkg="trajectory_gen"
-    type="min_accel_node"
-    name="min_accel"
-    required="true"
-    output="screen">
-    <param name="rate" value="40"/>
-    <param name="topic_name" value="$(arg controller3)"/>
-  </node>
-
-  <node pkg="trajectory_gen"
-    type="min_jerk_node"
-    name="min_jerk"
-    required="true"
-    output="screen">
-    <param name="rate" value="40"/>
-    <param name="topic_name" value="$(arg controller)"/>
-  </node>
-
-  <node pkg="trajectory_gen"
-    type="min_snap_node"
-    name="min_snap"
-    required="true"
-    output="screen">
-    <param name="rate" value="40"/>
-    <param name="topic_name" value="$(arg controller2)"/>
-  </node>
-
-	<node pkg="asctec_launch"
-		type="dummy_odom_node"
-		name="dummy_odom"
-		required="true"
-		output="screen" 
-		if="$(arg dummy)">
-		<param name="rate" value="40"/>
-		<param name="q_name" value="$(arg controller)"/>
-		<param name="q_frame" value="$(arg q_frame)"/>
-		<param name="w_frame" value="$(arg w_frame)"/>
-		<param name="track" value="true"/>
-	</node>
-
-	<node pkg="asctec_launch"
-		type="asctec_vicon_node"
-		name="asctec_vicon"
-		required="true"
-		output="screen">
-		<param name="q_name" value="$(arg controller)"/>
-		<param name="q_frame" value="$(arg q_frame)"/>
-		<param name="w_frame" value="$(arg w_frame)"/>
-	</node>
-
-	<node pkg="asctec_launch"
-		type="aggressive_node"
-		name="aggressivey"
-		output="screen">
-		<param name="topic" value="$(arg controller)"/>
-	</node>
-
-	<node pkg="asctec_launch"
-		type="dummy_odom_node"
-		name="dummy_odom2"
-		required="true"
-		output="screen" 
-		if="$(arg dummy)">
-		<param name="rate" value="40"/>
-		<param name="q_name" value="$(arg controller2)"/>
-		<param name="q_frame" value="$(arg q_frame2)"/>
-		<param name="w_frame" value="$(arg w_frame)"/>
-		<param name="track" value="true"/>
-	</node>
-
-	<node pkg="asctec_launch"
-		type="asctec_vicon_node"
-		name="asctec_vicon2"
-		required="true"
-		output="screen">
-		<param name="q_name" value="$(arg controller2)"/>
-		<param name="q_frame" value="$(arg q_frame2)"/>
-		<param name="w_frame" value="$(arg w_frame)"/>
-	</node>
-
-	<node pkg="asctec_launch"
-		type="aggressive_node"
-		name="aggressivey2"
-		output="screen">
-		<param name="topic" value="$(arg controller2)"/>
-	</node>
-
-	<node pkg="asctec_launch"
-		type="dummy_odom_node"
-		name="dummy_odom3"
-		required="true"
-		output="screen" 
-		if="$(arg dummy)">
-		<param name="rate" value="40"/>
-		<param name="q_name" value="$(arg controller3)"/>
-		<param name="q_frame" value="$(arg q_frame3)"/>
-		<param name="w_frame" value="$(arg w_frame)"/>
-		<param name="track" value="true"/>
-	</node>
-
-	<node pkg="asctec_launch"
-		type="asctec_vicon_node"
-		name="asctec_vicon3"
-		required="true"
-		output="screen">
-		<param name="q_name" value="$(arg controller3)"/>
-		<param name="q_frame" value="$(arg q_frame3)"/>
-		<param name="w_frame" value="$(arg w_frame)"/>
-	</node>
-
-	<node pkg="asctec_launch"
-		type="aggressive_node"
-		name="aggressivey3"
-		output="screen">
-		<param name="topic" value="$(arg controller3)"/>
-	</node>
+		<node pkg="asctec_launch"
+			type="aggressive_node"
+			name="aggressive"
+			output="screen">
+		</node>
+	</group>
 
 </launch>
