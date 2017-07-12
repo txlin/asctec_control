@@ -80,6 +80,7 @@ void showBorder(bool outOf, float z)
 
 	border.header.frame_id = world;
 	border.header.stamp = ros::Time::now();
+	border.ns = "ugv_border";
 	border.id = 2;
 	border.action = visualization_msgs::Marker::ADD;
 	border.type = visualization_msgs::Marker::LINE_LIST;
@@ -269,11 +270,11 @@ int main(int argc, char** argv) {
 	ros::Rate loop_rate = freq;
 	
 	ros::param::get("~world", world);
-	ros::param::get("~ugv_topic", ugv);
+	ros::param::get("~ugv_odom", ugv);
 
 	wpt_pub = nh.advertise<asctec_msgs::WaypointCmd>(ros::this_node::getNamespace()+"/waypoints", 10);
 	pos_pub = nh.advertise<asctec_msgs::PositionCmd>(ros::this_node::getNamespace()+"/position_cmd", 10);
-	border_pub = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/border", 10);
+	border_pub = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/asctec_viz", 10);
 
 	status_sub = nh.subscribe(ros::this_node::getNamespace()+"/status", 10, statusCallback);
 	joy_sub = nh.subscribe("/joy", 10, joyCallback);
@@ -297,8 +298,8 @@ int main(int argc, char** argv) {
 			case 1:
 				//Check exit conditions
 				if(isDone) {
-					float tTravel = sqrt(pow(odom_quad_.pose.pose.position.x,2) + pow(odom_quad_.pose.pose.position.y,2) + pow((1 - odom_quad_.pose.pose.position.z),2)) / maxV;
-					tTravel = limit(tTravel, 10, 1);
+					//float tTravel = sqrt(pow(odom_quad_.pose.pose.position.x,2) + pow(odom_quad_.pose.pose.position.y,2) + pow((1 - odom_quad_.pose.pose.position.z),2)) / maxV;
+					float tTravel = 5;
 					sendTrajectory(tTravel, 0.0, 0.0, 1.0, 0.0);
 
 					ROS_INFO("Taking off to 0.0, 0.0, 1.0, time of travel: %f", tTravel);

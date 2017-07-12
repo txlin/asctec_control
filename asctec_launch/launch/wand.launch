@@ -1,19 +1,24 @@
 <launch>
 	<arg name="group_ns" value="asctec" />
-	<arg name="sim" value="true"/>
+	<arg name="linear" value="true" />
+	<arg name="sim" value="false"/>
 
 	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
 
 	<group ns="$(arg group_ns)">
-		<include file="$(find asctec_launch)/basic_launch/min_snap.launch">
-        <arg name="group_ns" value="$(arg group_ns)" /> 
-        <arg name="sim" value="$(arg sim)" /> 
+		<include file="$(find asctec_launch)/basic_launch/min_jerk_wand.launch">
+      <arg name="group_ns" value="$(arg group_ns)" /> 
+      <arg name="linear" value="$(arg linear)" />
+			<arg name="continuous" value="false" />
+      <arg name="sim" value="$(arg sim)" /> 
     </include>
 
 		<node pkg="asctec_launch"
-			type="nl_wand_node"
-			name="wand-y"
+			type="wand_node"
+			name="wand"
 			output="screen">
+			<param name="world" value="odom"/>
+			<param name="wand" value="vicon/hri_wand/hri_wand"/>
 		</node>
 
 	</group>

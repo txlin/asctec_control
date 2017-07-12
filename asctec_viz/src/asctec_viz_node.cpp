@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 	ros::param::get("~mesh_resource", mesh_resource);
 	ros::param::get("~decay", life);
 
-	waypoint_viz = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/asctec_viz", 10);
+	waypoint_viz = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/asctec_viz", 100);
 	ros::Subscriber wp = nh.subscribe(ros::this_node::getNamespace()+"/waypoints", 10, waypointCallback);
 	ros::Subscriber cmd = nh.subscribe(ros::this_node::getNamespace()+"/position_cmd", 10, cmdCallback);
   ros::Subscriber odom = nh.subscribe(ros::this_node::getNamespace()+"/odom", 10, odomCallback);

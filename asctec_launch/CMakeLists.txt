@@ -142,11 +142,12 @@ add_executable(dummy_odom_node src/dummy_odom.cpp)
 add_executable(ugv_vicon_node src/ugv_vicon_odom.cpp)
 add_executable(hover_node src/hover.cpp)
 add_executable(step_node src/step_test.cpp)
-add_executable(nl_wand_node src/wand_demo.cpp)
-add_executable(nl_track_node src/ugv.cpp)
+add_executable(wand_node src/wand_demo.cpp)
+add_executable(track_node src/ugv.cpp)
 add_executable(square_node src/square.cpp)
 add_executable(spiral_node src/spiral.cpp)
 add_executable(circle_node src/circle.cpp)
+add_executable(avoid_node src/obs_avoid.cpp)
 add_executable(aggressive_node src/aggressive.cpp)
 
 ## Rename C++ executable without prefix
@@ -163,11 +164,12 @@ add_dependencies(dummy_odom_node so3_control_generate_messages_cpp)
 add_dependencies(ugv_vicon_node so3_control_generate_messages_cpp)
 add_dependencies(hover_node so3_control_generate_messages_cpp)
 add_dependencies(step_node so3_control_generate_messages_cpp)
-add_dependencies(nl_wand_node so3_control_generate_messages_cpp)
-add_dependencies(nl_track_node so3_control_generate_messages_cpp)
+add_dependencies(wand_node so3_control_generate_messages_cpp)
+add_dependencies(track_node so3_control_generate_messages_cpp)
 add_dependencies(square_node so3_control_generate_messages_cpp)
 add_dependencies(spiral_node so3_control_generate_messages_cpp)
 add_dependencies(circle_node so3_control_generate_messages_cpp)
+add_dependencies(avoid_node so3_control_generate_messages_cpp)
 add_dependencies(aggressive_node so3_control_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
@@ -189,10 +191,10 @@ target_link_libraries(hover_node
 target_link_libraries(step_node
   ${catkin_LIBRARIES}
 )
-target_link_libraries(nl_wand_node
+target_link_libraries(wand_node
   ${catkin_LIBRARIES}
 )
-target_link_libraries(nl_track_node
+target_link_libraries(track_node
   ${catkin_LIBRARIES}
 )
 target_link_libraries(square_node
@@ -202,6 +204,9 @@ target_link_libraries(spiral_node
   ${catkin_LIBRARIES}
 )
 target_link_libraries(circle_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(avoid_node
   ${catkin_LIBRARIES}
 )
 target_link_libraries(aggressive_node

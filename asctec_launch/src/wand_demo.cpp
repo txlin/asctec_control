@@ -19,8 +19,8 @@
 #include <string.h>
 
 #define freq 40
-#define maxV 0.5
-#define maxA 1.0	//		m/s^2
+#define maxV 0.3
+#define maxA 0.3	//		m/s^2
 
 #define XBOUND_H 1.0
 #define XBOUND_L -1.0
@@ -35,7 +35,7 @@
 #define BORDER_NUMB 1
 #define BORDER_TOP 0.5
 
-#define k_ang 0.9
+#define k_ang 0.8
 #define ANG_LIMIT M_PI/8
 
 int state = 0;
@@ -438,7 +438,7 @@ int main(int argc, char** argv) {
 	cmd_pub = nh.advertise<asctec_msgs::PositionCmd>(ros::this_node::getNamespace()+"/position_cmd", 10);
 
 	wpt_pub = nh.advertise<asctec_msgs::WaypointCmd>(ros::this_node::getNamespace()+"/waypoints", 10);
-	border_pub = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/border", 10);
+	border_pub = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/asctec_viz", 10);
 	sborder_pub = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/soft_border", 10);
 
 	si_sub = nh.subscribe(ros::this_node::getNamespace()+"/cmd_si", 1, siCallback);

@@ -7,6 +7,7 @@
 #include <asctec_msgs/WaypointCmd.h>
 #include <nav_msgs/Odometry.h>
 #include <visualization_msgs/Marker.h>
+#include <tf/transform_datatypes.h>
 #include <geometry_msgs/Point.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Empty.h>

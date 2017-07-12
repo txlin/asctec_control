@@ -1,8 +1,9 @@
 #include <min_jerk.h>
 #include "min_jerk.cpp"
 
-ros::Publisher pos_goal, status, wp_viz;
 MinJerk min_jerk;
+bool continuous = true;
+ros::Publisher pos_goal, status, wp_viz;
 
 /* -------------------- callbacks -------------------- */
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg)
@@ -22,7 +23,7 @@ void timerCallback(const ros::TimerEvent& event)
 	std_msgs::Bool temp;
 	temp.data = min_jerk.getStatus();
 	status.publish(temp);
-	if(!temp.data) {
+	if(!temp.data || continuous) {
 		pos_goal.publish(*min_jerk.getNextCommand());
 		wp_viz.publish(*min_jerk.getMarker());
 	}
@@ -35,7 +36,8 @@ int main(int argc, char** argv) {
 	/* -------------------- roslaunch parameter values -------------------- */
 	float rate = 20;
   ros::param::get("~rate", rate);
-  
+  ros::param::get("~continuous", continuous);
+
 	/* -------------------- Timer, Publishers, and Subscribers -------------------- */
   ros::Timer timer = nh.createTimer(ros::Duration(1/rate), timerCallback);
   pos_goal = nh.advertise<asctec_msgs::PositionCmd>(ros::this_node::getNamespace()+"/position_cmd", 10); 																	// Position goals to linear and nonlinear controllers

@@ -50,7 +50,7 @@ void MinAccel::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
   	Bz(0,0) = odom_.pose.pose.position.z;
     Bz(2,0) = odom_.twist.twist.linear.z;
       
-  	Byaw(0,0) = odom_.pose.pose.orientation.z;
+  	Byaw(0,0) = tf::getYaw(odom_.pose.pose.orientation);
     Byaw(2,0) = odom_.twist.twist.angular.z;
 
     t0 = ros::Time::now();
@@ -127,6 +127,7 @@ visualization_msgs::Marker *MinAccel::deleteMarker(void) {
 }
 
 visualization_msgs::Marker *MinAccel::getMarker(void) {
+	if(T.size() == 0) return &path_;
 	double ts = ros::Time::now().toSec() - t0.toSec();
 	if(ts >= T.front()) ts = T.front();
 	path_.points.clear();

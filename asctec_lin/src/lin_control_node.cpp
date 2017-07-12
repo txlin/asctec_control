@@ -14,6 +14,7 @@
 #define MIN_THRUST 0.0d
 
 PIDControl controller_;
+asctec_msgs::SICmd trpy_command;
 ros::Publisher trpy_command_pub_;
 ros::Subscriber odom_sub_;
 ros::Subscriber position_cmd_sub_;
@@ -26,13 +27,13 @@ void publishTRPYCommand(void)
 {
   controller_.calculateControl(des_pos_, des_vel_, des_acc_, des_yaw_, kx_, kv_, ki_, ki_yaw_, k_yaw_);
   const Eigen::Vector4d &trpy = controller_.getControls();
-
-  asctec_msgs::SICmd trpy_command;
-  trpy_command.thrust = std::min(double(trpy(0)),MAX_THRUST)/MAX_THRUST;
-  trpy_command.roll   = std::min(MAX_ANGLE,std::max(-MAX_ANGLE,trpy(1)));
-  trpy_command.pitch  = std::min(MAX_ANGLE,std::max(-MAX_ANGLE,-trpy(2)));
-  trpy_command.yaw    = trpy(3);
-  trpy_command.cmd[0] = trpy_command.cmd[1] = trpy_command.cmd[2] = trpy_command.cmd[3] = true;
+	if(!isnan(trpy(0))) {
+		trpy_command.thrust = std::min(double(trpy(0)),MAX_THRUST)/MAX_THRUST;
+		trpy_command.roll   = std::min(MAX_ANGLE,std::max(-MAX_ANGLE,trpy(1)));
+		trpy_command.pitch  = std::min(MAX_ANGLE,std::max(-MAX_ANGLE,-trpy(2)));
+		trpy_command.yaw    = -trpy(3);
+		trpy_command.cmd[0] = trpy_command.cmd[1] = trpy_command.cmd[2] = trpy_command.cmd[3] = true;
+	}
   trpy_command_pub_.publish(trpy_command);
 
 }

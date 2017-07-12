@@ -1,8 +1,9 @@
 #include <min_accel.h>
 #include "min_accel.cpp"
 
-ros::Publisher pos_goal, status, wp_viz;
 MinAccel min_accel;
+bool continuous = true;
+ros::Publisher pos_goal, status, wp_viz;
 
 /* -------------------- callbacks -------------------- */
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg)
@@ -22,7 +23,7 @@ void timerCallback(const ros::TimerEvent& event)
 	std_msgs::Bool temp;
 	temp.data = min_accel.getStatus();
 	status.publish(temp);
-	if(!temp.data) {
+	if(!temp.data || continuous) {
 		pos_goal.publish(*min_accel.getNextCommand());
 		wp_viz.publish(*min_accel.getMarker());
 	}
@@ -35,6 +36,7 @@ int main(int argc, char** argv) {
 	/* -------------------- roslaunch parameter values -------------------- */
 	float rate = 20;
   ros::param::get("~rate", rate);
+	ros::param::get("~continuous", continuous);
 
 	/* -------------------- Timer, Publishers, and Subscribers -------------------- */
   ros::Timer timer = nh.createTimer(ros::Duration(1/rate), timerCallback);

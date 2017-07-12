@@ -13,6 +13,7 @@
 
 SO3Control controller;
 ros::Publisher si_cmd_pub;
+asctec_msgs::SICmd si_command;
 
 bool position_cmd_updated = false, position_cmd_init = false;
 Eigen::Vector3d des_pos, des_vel, des_acc, kx, kv;
@@ -28,27 +29,29 @@ void publishSO3Command(void)
   const Eigen::Vector3d &force = controller.getComputedForce();
   const Eigen::Quaterniond &orientation = controller.getComputedOrientation();
   const Eigen::Vector3d &omg_ = controller.getDesiredAngularVelocity();
-  asctec_msgs::SICmd si_command;
-  tf::Quaternion q(orientation.x(), orientation.y(), orientation.z(), orientation.w());
-  double roll, pitch, yaw;
-  tf::Matrix3x3 m(q);
-  m.getRPY(roll, pitch, yaw);
 
-  si_command.cmd[0] = true;
-  si_command.cmd[1] = true;
-  si_command.cmd[2] = true;
-  si_command.cmd[3] = true; 
-  si_command.thrust = force.norm();
-  if(si_command.thrust > MAX_THRUST) {
-    si_command.thrust = 1.0;
-  }else if(si_command.thrust < MIN_THRUST) {
-    si_command.thrust = 0.0;
-  } else{
-    si_command.thrust = si_command.thrust/MAX_THRUST;
-  }
-  si_command.roll = roll;
-  si_command.pitch = -pitch;
-  si_command.yaw = yaw;
+	if(!isnan(force(2))) {
+		tf::Quaternion q(orientation.x(), orientation.y(), orientation.z(), orientation.w());
+		double roll, pitch, yaw;
+		tf::Matrix3x3 m(q);
+		m.getRPY(roll, pitch, yaw);
+
+		si_command.cmd[0] = true;
+		si_command.cmd[1] = true;
+		si_command.cmd[2] = true;
+		si_command.cmd[3] = true; 
+		si_command.thrust = force.norm();
+		if(si_command.thrust > MAX_THRUST) {
+		  si_command.thrust = 1.0;
+		}else if(si_command.thrust < MIN_THRUST) {
+		  si_command.thrust = 0.0;
+		} else{
+		  si_command.thrust = si_command.thrust/MAX_THRUST;
+		}
+		si_command.roll = roll;
+		si_command.pitch = -pitch;
+		si_command.yaw = yaw;
+	}
   si_cmd_pub.publish(si_command);
 }
 

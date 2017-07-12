@@ -54,7 +54,7 @@ void MinJerk::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
     Bz(2,0) = odom_.twist.twist.linear.z;
     Bz(4,0) = 0.0;
       
-  	Byaw(0,0) = odom_.pose.pose.orientation.z;
+  	Byaw(0,0) = tf::getYaw(odom_.pose.pose.orientation);
     Byaw(2,0) = odom_.twist.twist.angular.z;
     Byaw(4,0) = 0.0;
 
@@ -141,6 +141,7 @@ visualization_msgs::Marker *MinJerk::deleteMarker(void) {
 }
 
 visualization_msgs::Marker *MinJerk::getMarker(void) {
+	if(T.size() == 0) return &path_;
 	double ts = ros::Time::now().toSec() - t0.toSec();
 	if(ts >= T.front()) ts = T.front();
 	path_.points.clear();
@@ -214,7 +215,7 @@ asctec_msgs::PositionCmd* MinJerk::getNextCommand(void) {
         cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(5-i,0)*pow(t,i-2);
 
       }
-			//cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
+			cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
       cmd_ = cmd;
     }
   }

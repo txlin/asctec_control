@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 
 	ros::param::get("~ugv_name", ugv_name);
 	ros::param::get("~ugv_frame", ugv_frame);
-	ros::param::get("~w_frame", w_frame);
+	ros::param::get("~world", w_frame);
 
 	odom_pub = n.advertise<nav_msgs::Odometry>(ugv_name+"/odom", 10);
 	ros::Subscriber vicon_sub = n.subscribe(ugv_frame, 10, viconCallback);

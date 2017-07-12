@@ -12,7 +12,6 @@
 
 	<include file="$(find asctec_launch)/basic_launch/nonlinear.launch" unless="$(arg linear)"/>
 	<include file="$(find asctec_launch)/basic_launch/linear.launch" if="$(arg linear)"/>
-
 	<node name="rviz" pkg="rviz" type="rviz" if="$(arg viz)" args="-d $(find asctec_viz)/rviz/$(arg rviz)" />
 
 	<node pkg="asctec_viz"
@@ -22,21 +21,22 @@
 	</node>
 
 	<node pkg="trajectory_gen"
-	  type="min_snap_node"
-	  name="min_snap"
+	  type="min_jerk_node"
+	  name="min_jerk"
 	  required="true"
 	  output="screen">
-	  <param name="rate" value="15"/>
+	  <param name="rate" value="20"/>
 		<param name="continuous" value="$(arg continuous)"/>
 	</node>
 
-	<node pkg="asctec_ll_updated" name="$(arg group_ns)" type="asctec_ll_updated_node" output="screen" unless="$(arg sim)">
+	<node pkg="asctec_ll_updated" name="asctec_ll" type="asctec_ll_updated_node" output="screen" unless="$(arg sim)">
 	   <param name="port" value="$(arg port)"/>
 	   <param name="ll_status_rate" value="1"/>
 	   <param name="imu_calc_data_rate" value="0"/>
 	   <param name="rc_data_rate" value="0"/>
 	   <param name="ctrl_out_rate" value="10"/>
 	   <param name="gps_data_advanced_rate" value="0"/>
+		 <remap from="cmd_si" to="si_remap" />
 	</node>
 
 	<node pkg="asctec_launch"

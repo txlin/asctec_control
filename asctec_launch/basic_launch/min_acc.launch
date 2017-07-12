@@ -7,6 +7,7 @@
 	<arg name="viz" default="true"/>
 	<arg name="mesh" default="package://mesh_visualization/meshes/hummingbird.mesh"/>
 	<arg name="linear" default="false"/>
+	<arg name="continuous" default="true"/>
 	<arg name="sim" default="false"/>
 
 	<include file="$(find asctec_launch)/basic_launch/nonlinear.launch" unless="$(arg linear)"/>
@@ -25,10 +26,11 @@
 	  name="min_accel"
 	  required="true"
 	  output="screen">
-	  <param name="rate" value="40"/>
+	  <param name="rate" value="15"/>
+		<param name="continuous" value="$(arg continuous)"/>
 	</node>
 
-	<node pkg="asctec_ll_updated" name="$(arg group_ns)" type="asctec_ll_updated_node" output="screen" unless="$(arg sim)">
+	<node pkg="asctec_ll_updated" name="asctec_ll" type="asctec_ll_updated_node" output="screen" unless="$(arg sim)">
 	   <param name="port" value="$(arg port)"/>
 	   <param name="ll_status_rate" value="1"/>
 	   <param name="imu_calc_data_rate" value="0"/>

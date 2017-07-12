@@ -17,9 +17,9 @@
 #define obsNumb 10
 
 #define repel_pts 3.0	//always integer
-#define repel 0.7       //radius
+#define repel 0.8       //radius
 #define repel_t 5.0
-#define repel_rings 5
+#define repel_rings 2
 #define end_off 0.5
 
 #define real_r  0.14    //11 inches diameter
@@ -28,7 +28,7 @@
 #define freq 10
 #define maxV 0.25
 #define maxVZ 0.2
-#define maxA maxV
+#define maxA 0.1
 
 using namespace std;
 
@@ -65,34 +65,20 @@ bool isFlying = false;
 obs * obs_ptr = new obs[obsNumb];
 int points;
 
-Trajectory_Accel * path_gen = new Trajectory_Accel(1.0);
-
 string world, topic, obs_frame;
-pc_asctec_sim::pc_state q_st;
-pc_asctec_sim::pc_traj_cmd raw;
-pc_asctec_sim::CMatrix C;
+nav_msgs::Odometry odom_;
 
-ros::Publisher traj_pub, start_pub, obs_pub, tiki_pub, quad_pub;
-ros::Subscriber rawtraj_sub, traj_sub, joy_sub, state_sub;
+ros::Publisher traj_pub, tiki_pub;
+ros::Subscriber traj_sub, joy_sub, odom_sub;
 
-void stateCallback(const pc_asctec_sim::pc_state::ConstPtr& msg)
+void odomCallback(const nav_msgs::Odometry::ConstPtr& msg)
 {
-	q_st = *msg;
+	odom_ = *msg;
 }
 
 void trajCallback(const std_msgs::Bool::ConstPtr& msg)
 {
 	isDone = msg->data;
-}
-
-void rawtrajCallback(const pc_asctec_sim::pc_traj_cmd::ConstPtr& msg)
-{
-	NEW_PATH temp;
-	temp.state = q_st;
-	temp.cmd = *msg;
-	points = msg->points;
-
-	path_gen->getPathConstants(&temp,&C);
 }
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
@@ -146,92 +132,128 @@ void sendAvoidABNew(float wait, float x, float y, float z, float yaw, tf::Stampe
 	float theta = asin(abs(obsx)/repel);
 	float gamma = M_PI - 2*theta;
 
-	asctec_msgs::Waypoint cmd;
+	asctec_msgs::WaypointCmd cmd, last;
 	//Set first point of obstacle radius
 	cmd.position.x = 0.0;
 	cmd.position.y = obsy - repel*cos(theta) - end_off;
+	cmd.velocity.x = 0.0;
 	cmd.velocity.y = maxV;
+	cmd.accel.x = 0.0;
+	cmd.accel.y = 0.0;
 	cmd.position.z = 1.0;
-	cmd.time = getTravTime(q_st.x, cmd.x[0], q_st.y, cmd.y[0], q_st.z, cmd.z[0]);
+	cmd.time = getTravTime(odom_.pose.pose.position.x, cmd.position.x, odom_.pose.pose.position.y, cmd.position.y, odom_.pose.pose.position.z, cmd.position.z);
+	traj_pub.publish(cmd);
+	last = cmd;
 
 	//Set mid points of obstacle radius
 	if(obsx > 0) {
 		//Set second point of obstacle radius
-		cmd.x[1] = -0.1*cos(theta);
-		cmd.y[1] = obsy - repel*cos(theta) - end_off/8;
-		cmd.vy[1] = maxV;
-		cmd.z[1] = 1.0;
-		cmd.duration[1] = getTravTime(cmd.x[0], cmd.x[1], cmd.y[0], cmd.y[1], cmd.z[0], cmd.z[1]);
+		/*cmd.position.x = -0.1*cos(theta);
+		cmd.position.y = obsy - repel*cos(theta) - end_off/8;
+		cmd.velocity.x = 0.0;
+		cmd.velocity.y = maxV;
+		cmd.accel.x = 0.0;
+		cmd.accel.y = 0.0;
+		cmd.position.z = 1.0;
+		cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+		traj_pub.publish(cmd);
+		last = cmd;*/
 
 		for(int i=1; i<=repel_pts; i++) {
 			float newAng = theta + i*gamma/(repel_pts+1);
-			cmd.x[i+1] = obsx - repel*sin(newAng);
-			cmd.vx[i+1] = -maxV*sin(M_PI/2 * i/(repel_pts-1) + M_PI/2);
-			cmd.ax[i+1] = -maxV*cos(M_PI/2 * i/(repel_pts-1) + M_PI/2) * M_PI/(2*(repel_pts-1));
+			cmd.position.x = obsx - repel*sin(newAng);
+			cmd.velocity.x = -maxV*sin(M_PI/2 * i/(repel_pts-1) + M_PI/2);
+			cmd.accel.x = -maxV*cos(M_PI/2 * i/(repel_pts-1) + M_PI/2) * M_PI/(2*(repel_pts-1));
 
-			cmd.y[i+1] = obsy - repel*cos(newAng);
-			cmd.vy[i+1] = maxV*cos(M_PI/2 * i/(repel_pts-1) - M_PI/2);
-			cmd.ay[i+1] = -maxV*sin(M_PI/2 * i/(repel_pts-1) - M_PI/2) * M_PI/(2*(repel_pts-1));
+			cmd.position.y = obsy - repel*cos(newAng);
+			cmd.velocity.y = maxV*cos(M_PI/2 * i/(repel_pts-1) - M_PI/2);
+			cmd.accel.y = -maxV*sin(M_PI/2 * i/(repel_pts-1) - M_PI/2) * M_PI/(2*(repel_pts-1));
 
-			cmd.z[i+1] = 1.0;
-			cmd.duration[i+1] = getTravTime(cmd.x[i], cmd.x[i+1], cmd.y[i], cmd.y[i+1], cmd.z[i], cmd.z[i+1]);
+			cmd.position.z = 1.0;
+			cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+			last = cmd;
+			traj_pub.publish(cmd);
 		}
 
 		//Set second to last point of obstacle radius
-		cmd.x[repel_pts+2] = -0.1*cos(theta);
-		cmd.y[repel_pts+2] = obsy + repel*cos(theta) + end_off/8;
-		cmd.vy[repel_pts+2] = maxV;
-		cmd.z[repel_pts+2] = 1.0;
-		cmd.duration[repel_pts+2] = getTravTime(cmd.x[repel_pts+1], cmd.x[repel_pts+2], cmd.y[repel_pts+1], cmd.y[repel_pts+2], cmd.z[repel_pts+1], cmd.z[repel_pts+2]);
+		/*cmd.position.x = -0.1*cos(theta);
+		cmd.position.y = obsy + repel*cos(theta) + end_off/8;
+		cmd.velocity.x = 0.0;
+		cmd.velocity.y = maxV;
+		cmd.accel.x = 0.0;
+		cmd.accel.y = 0.0;
+		cmd.position.z = 1.0;
+		cmd.time = getTravTime(last.position.x, cmd.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+		traj_pub.publish(cmd);
+		last = cmd;*/
 
 	}else {
 		//Set second point of obstacle radius
-		cmd.x[1] = 0.1*cos(theta);
-		cmd.y[1] = obsy - repel*cos(theta) - end_off/8;
-		cmd.vy[1] = maxV;
-		cmd.z[1] = 1.0;
-		cmd.duration[1] = getTravTime(cmd.x[0], cmd.x[1], cmd.y[0], cmd.y[1], cmd.z[0], cmd.z[1]);
+		/*cmd.position.x = 0.1*cos(theta);
+		cmd.position.y = obsy - repel*cos(theta) - end_off/8;
+		cmd.velocity.x = 0.0;
+		cmd.velocity.y = maxV;
+		cmd.accel.x = 0.0;
+		cmd.accel.y = 0.0;
+		cmd.position.z = 1.0;
+		cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+		traj_pub.publish(cmd);
+		last = cmd;*/
 
 		for(int i=1; i<=repel_pts; i++) {
 			float newAng = theta + i*gamma/(repel_pts+1);
-			cmd.x[i+1] = obsx + repel*sin(newAng);
-			cmd.vx[i+1] = maxV*sin(M_PI/2 * i/(repel_pts-1) + M_PI/2);
-			cmd.ax[i+1] = maxV*cos(M_PI/2 * i/(repel_pts-1) + M_PI/2) * M_PI/(2*(repel_pts-1));
+			cmd.position.x = obsx + repel*sin(newAng);
+			cmd.velocity.x = maxV*sin(M_PI/2 * i/(repel_pts-1) + M_PI/2);
+			cmd.accel.x = maxV*cos(M_PI/2 * i/(repel_pts-1) + M_PI/2) * M_PI/(2*(repel_pts-1));
 
-			cmd.y[i+1] = obsy - repel*cos(newAng);
-			cmd.vy[i+1] = maxV*cos(M_PI/2 * i/(repel_pts-1) - M_PI/2);
-			cmd.ay[i+1] = -maxV*sin(M_PI/2 * i/(repel_pts-1) - M_PI/2) * M_PI/(2*(repel_pts-1));
+			cmd.position.y = obsy - repel*cos(newAng);
+			cmd.velocity.y = maxV*cos(M_PI/2 * i/(repel_pts-1) - M_PI/2);
+			cmd.accel.y = -maxV*sin(M_PI/2 * i/(repel_pts-1) - M_PI/2) * M_PI/(2*(repel_pts-1));
 
-			cmd.z[i+1] = 1.0;
-			cmd.duration[i+1] = getTravTime(cmd.x[i], cmd.x[i+1], cmd.y[i], cmd.y[i+1], cmd.z[i], cmd.z[i+1]);
+			cmd.position.z = 1.0;
+			cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+			traj_pub.publish(cmd);
+			last = cmd;
 		}
 
 		//Set second to last point of obstacle radius
-		cmd.x[repel_pts+2] = 0.1*cos(theta);
-		cmd.y[repel_pts+2] = obsy + repel*cos(theta) + end_off/8;
-		cmd.vy[repel_pts+2] = maxV;
-		cmd.z[repel_pts+2] = 1.0;
-		cmd.duration[repel_pts+2] = getTravTime(cmd.x[repel_pts+1], cmd.x[repel_pts+2], cmd.y[repel_pts+1], cmd.y[repel_pts+2], cmd.z[repel_pts+1], cmd.z[repel_pts+2]);
+		/*cmd.position.x = 0.1*cos(theta);
+		cmd.position.y = obsy + repel*cos(theta) + end_off/8;
+		cmd.velocity.x = 0.0;
+		cmd.velocity.y = maxV;
+		cmd.accel.x = 0.0;
+		cmd.accel.y = 0.0;
+		cmd.position.z = 1.0;
+		cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+		traj_pub.publish(cmd);
+		last = cmd;*/
 	}
 
 	//Set final point of obstacle radius
-	cmd.x[repel_pts+3] = 0.0;
-	cmd.y[repel_pts+3] = obsy + repel*cos(theta) + end_off;
-	cmd.vy[repel_pts+3] = maxV;
-	cmd.z[repel_pts+3] = 1.0;
-	cmd.duration[repel_pts+3] = getTravTime(cmd.x[repel_pts+2], cmd.x[repel_pts+3], cmd.y[repel_pts+2], cmd.y[repel_pts+3], cmd.z[repel_pts+2], cmd.z[repel_pts+3]);
+	cmd.position.x = 0.0;
+	cmd.position.y = obsy + repel*cos(theta) + end_off;
+	cmd.velocity.x = 0.0;
+	cmd.velocity.y = maxV;
+	cmd.accel.x = 0.0;
+	cmd.accel.y = 0.0;
+	cmd.position.z = 1.0;
+	cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+	traj_pub.publish(cmd);
+	last = cmd;
 
 	//Set end point of path
-	cmd.x[repel_pts+4] = x;
-	cmd.y[repel_pts+4] = y;
-	cmd.z[repel_pts+4] = z;
-	cmd.yaw[repel_pts+4] = yaw;
-	cmd.wait_time[repel_pts+4] = wait;
-	cmd.duration[repel_pts+4] = getTravTime(cmd.x[repel_pts+3], cmd.x[repel_pts+4], cmd.y[repel_pts+3], cmd.y[repel_pts+4], cmd.z[repel_pts+3], cmd.z[repel_pts+4]);
-
-	cmd.points = repel_pts+5;
-	isDone = false;
+	cmd.position.x = x;
+	cmd.position.y = y;
+	cmd.position.z = z;
+	cmd.velocity.x = 0.0;
+	cmd.velocity.y = 0.0;
+	cmd.accel.x = 0.0;
+	cmd.accel.y = 0.0;
+	cmd.yaw[0] = yaw;
+	cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
 	traj_pub.publish(cmd);
+
+	isDone = false;
 }
 
 void sendAvoidBANew(float wait, float x, float y, float z, float yaw, tf::StampedTransform * transform)
@@ -247,104 +269,135 @@ void sendAvoidBANew(float wait, float x, float y, float z, float yaw, tf::Stampe
 	float theta = asin(abs(obsx)/repel);
 	float gamma = M_PI - 2*theta;
 
-	pc_asctec_sim::pc_traj_cmd cmd;
+	asctec_msgs::WaypointCmd cmd, last;
 	//Set first point of obstacle radius
-	cmd.x[0] = 0.0;
-	cmd.y[0] = obsy + repel*cos(theta) + end_off;
-	cmd.vy[0] = -maxV;
-	cmd.z[0] = 1.0;
-	cmd.duration[0] = getTravTime(q_st.x, cmd.x[0], q_st.y, cmd.y[0], q_st.z, cmd.z[0]);
+	cmd.position.x = 0.0;
+	cmd.position.y = obsy + repel*cos(theta) + end_off;
+	cmd.velocity.x = 0.0;
+	cmd.velocity.y = -maxV;
+	cmd.position.z = 1.0;
+	cmd.time = getTravTime(odom_.pose.pose.position.x, cmd.position.x, odom_.pose.pose.position.y, cmd.position.y, odom_.pose.pose.position.z, cmd.position.z);
+	traj_pub.publish(cmd);
+	last = cmd;
 
 	//Set mid points of obstacle radius
 	if(obsx > 0) {
 		//Set second point of obstacle radius
-		cmd.x[1] = -0.1*cos(theta);
-		cmd.y[1] = obsy + repel*cos(theta) + end_off/8;
-		cmd.vy[1] = -maxV;
-		cmd.z[1] = 1.0;
-		cmd.duration[1] = getTravTime(cmd.x[0], cmd.x[1], cmd.y[0], cmd.y[1], cmd.z[0], cmd.z[1]);
+		/*cmd.position.x = -0.1*cos(theta);
+		cmd.position.y = obsy + repel*cos(theta) + end_off/8;
+		cmd.velocity.x = 0.0;
+		cmd.velocity.y = -maxV;
+		cmd.accel.x = 0.0;
+		cmd.accel.y = 0.0;
+		cmd.position.z = 1.0;
+		cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+		traj_pub.publish(cmd);
+		last = cmd;*/
 
 		for(int i=1; i<=repel_pts; i++) {
 			float newAng = theta + i*gamma/(repel_pts+1);
-			cmd.x[i+1] = obsx - repel*sin(newAng);
-			cmd.vx[i+1] = -maxV*sin(M_PI/2 * i/(repel_pts-1) + M_PI/2);
-			cmd.ax[i+1] = -maxV*cos(M_PI/2 * i/(repel_pts-1) + M_PI/2) * M_PI/(2*(repel_pts-1));
+			cmd.position.x = obsx - repel*sin(newAng);
+			cmd.velocity.x = -maxV*sin(M_PI/2 * i/(repel_pts-1) + M_PI/2);
+			cmd.accel.x = -maxV*cos(M_PI/2 * i/(repel_pts-1) + M_PI/2) * M_PI/(2*(repel_pts-1));
 
-			cmd.y[i+1] = obsy + repel*cos(newAng);
-			cmd.vy[i+1] = -maxV*cos(M_PI/2 * i/(repel_pts-1) - M_PI/2);
-			cmd.ay[i+1] = maxV*sin(M_PI/2 * i/(repel_pts-1) - M_PI/2) * M_PI/(2*(repel_pts-1));
+			cmd.position.y = obsy + repel*cos(newAng);
+			cmd.velocity.y = -maxV*cos(M_PI/2 * i/(repel_pts-1) - M_PI/2);
+			cmd.accel.y = maxV*sin(M_PI/2 * i/(repel_pts-1) - M_PI/2) * M_PI/(2*(repel_pts-1));
 
-			cmd.z[i+1] = 1.0;
-			cmd.duration[i+1] = getTravTime(cmd.x[i], cmd.x[i+1], cmd.y[i], cmd.y[i+1], cmd.z[i], cmd.z[i+1]);
+			cmd.position.z = 1.0;
+			cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+			traj_pub.publish(cmd);
+			last = cmd;
 		}
 
 		//Set second to last point of obstacle radius
-		cmd.x[repel_pts+2] = -0.1*cos(theta);
-		cmd.y[repel_pts+2] = obsy - repel*cos(theta) - end_off/8;
-		cmd.vy[repel_pts+2] = -maxV;
-		cmd.z[repel_pts+2] = 1.0;
-		cmd.duration[repel_pts+2] = getTravTime(cmd.x[repel_pts+1], cmd.x[repel_pts+2], cmd.y[repel_pts+1], cmd.y[repel_pts+2], cmd.z[repel_pts+1], cmd.z[repel_pts+2]);
+		/*cmd.position.x = -0.1*cos(theta);
+		cmd.position.y = obsy - repel*cos(theta) - end_off/8;
+		cmd.velocity.x = 0.0;
+		cmd.velocity.y = -maxV;
+		cmd.accel.x = 0.0;
+		cmd.accel.y = 0.0;
+		cmd.position.z = 1.0;
+		cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+		traj_pub.publish(cmd);
+		last = cmd;*/
 
 	}else {
 		//Set second point of obstacle radius
-		cmd.x[1] = 0.1*cos(theta);
-		cmd.y[1] = obsy + repel*cos(theta) + end_off/8;
-		cmd.vy[1] = -maxV;
-		cmd.z[1] = 1.0;
-		cmd.duration[1] = getTravTime(cmd.x[0], cmd.x[1], cmd.y[0], cmd.y[1], cmd.z[0], cmd.z[1]);
+		/*cmd.position.x = 0.1*cos(theta);
+		cmd.position.y = obsy + repel*cos(theta) + end_off/8;
+		cmd.velocity.y = -maxV;
+		cmd.accel.x = 0.0;
+		cmd.accel.y = 0.0;
+		cmd.position.z = 1.0;
+		cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+		traj_pub.publish(cmd);
+		last = cmd;*/
 
 		for(int i=1; i<=repel_pts; i++) {
 			float newAng = theta + i*gamma/(repel_pts+1);
-			cmd.x[i+1] = obsx + repel*sin(newAng);
-			cmd.vx[i+1] = maxV*sin(M_PI/2 * i/(repel_pts-1) + M_PI/2);
-			cmd.ax[i+1] = maxV*cos(M_PI/2 * i/(repel_pts-1) + M_PI/2) * M_PI/(2*(repel_pts-1));
+			cmd.position.x = obsx + repel*sin(newAng);
+			cmd.velocity.x = maxV*sin(M_PI/2 * i/(repel_pts-1) + M_PI/2);
+			cmd.accel.x = maxV*cos(M_PI/2 * i/(repel_pts-1) + M_PI/2) * M_PI/(2*(repel_pts-1));
 
-			cmd.y[i+1] = obsy + repel*cos(newAng);
-			cmd.vy[i+1] = -maxV*cos(M_PI/2 * i/(repel_pts-1) - M_PI/2);
-			cmd.ay[i+1] = maxV*sin(M_PI/2 * i/(repel_pts-1) - M_PI/2) * M_PI/(2*(repel_pts-1));
+			cmd.position.y = obsy + repel*cos(newAng);
+			cmd.velocity.y = -maxV*cos(M_PI/2 * i/(repel_pts-1) - M_PI/2);
+			cmd.accel.y = maxV*sin(M_PI/2 * i/(repel_pts-1) - M_PI/2) * M_PI/(2*(repel_pts-1));
 
-			cmd.z[i+1] = 1.0;
-			cmd.duration[i+1] = getTravTime(cmd.x[i], cmd.x[i+1], cmd.y[i], cmd.y[i+1], cmd.z[i], cmd.z[i+1]);
+			cmd.position.z = 1.0;
+			cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+			traj_pub.publish(cmd);
+			last = cmd;
 		}
 
 		//Set second to last point of obstacle radius
-		cmd.x[repel_pts+2] = 0.1*cos(theta);
-		cmd.y[repel_pts+2] = obsy - repel*cos(theta) - end_off/8;
-		cmd.vy[repel_pts+2] = -maxV;
-		cmd.z[repel_pts+2] = 1.0;
-		cmd.duration[repel_pts+2] = getTravTime(cmd.x[repel_pts+1], cmd.x[repel_pts+2], cmd.y[repel_pts+1], cmd.y[repel_pts+2], cmd.z[repel_pts+1], cmd.z[repel_pts+2]);
+		/*cmd.position.x = 0.1*cos(theta);
+		cmd.position.y = obsy - repel*cos(theta) - end_off/8;
+		cmd.velocity.x = 0.0;
+		cmd.velocity.y = -maxV;
+		cmd.accel.x = 0.0;
+		cmd.accel.y = 0.0;
+		cmd.position.z = 1.0;
+		cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+		traj_pub.publish(cmd);
+		last = cmd;*/
 	}
 
 	//Set final point of obstacle radius
-	cmd.x[repel_pts+3] = 0.0;
-	cmd.y[repel_pts+3] = obsy - repel*cos(theta) - end_off;
-	cmd.vy[repel_pts+3] = -maxV;
-	cmd.z[repel_pts+3] = 1.0;
-	cmd.duration[repel_pts+3] = getTravTime(cmd.x[repel_pts+2], cmd.x[repel_pts+3], cmd.y[repel_pts+2], cmd.y[repel_pts+3], cmd.z[repel_pts+2], cmd.z[repel_pts+3]);
+	cmd.position.x = 0.0;
+	cmd.position.y = obsy - repel*cos(theta) - end_off;
+	cmd.velocity.x = 0.0;
+	cmd.velocity.y = -maxV;
+	cmd.accel.x = 0.0;
+	cmd.accel.y = 0.0;
+	cmd.position.z = 1.0;
+	cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
+	traj_pub.publish(cmd);
+	last = cmd;
 
 	//Set end point of path
-	cmd.x[repel_pts+4] = x;
-	cmd.y[repel_pts+4] = y;
-	cmd.z[repel_pts+4] = z;
-	cmd.yaw[repel_pts+4] = yaw;
-	cmd.wait_time[repel_pts+4] = wait;
-	cmd.duration[repel_pts+4] = getTravTime(cmd.x[repel_pts+3], cmd.x[repel_pts+4], cmd.y[repel_pts+3], cmd.y[repel_pts+4], cmd.z[repel_pts+3], cmd.z[repel_pts+4]);
-
-	cmd.points = repel_pts+5;
-	isDone = false;
+	cmd.position.x = x;
+	cmd.position.y = y;
+	cmd.velocity.x = 0.0;
+	cmd.velocity.y = 0.0;
+	cmd.accel.x = 0.0;
+	cmd.accel.y = 0.0;
+	cmd.position.z = z;
+	cmd.yaw[0] = yaw;
+	cmd.time = getTravTime(cmd.position.x, last.position.x, cmd.position.y, last.position.y, cmd.position.z, last.position.z);
 	traj_pub.publish(cmd);
+
+	isDone = false;
 }
 
 void sendTrajectory(float wait, float x, float y, float z, float yaw) 
 {
-	pc_asctec_sim::pc_traj_cmd cmd;
-	cmd.x[0] = x;
-	cmd.y[0] = y;
-	cmd.z[0] = z;
+	asctec_msgs::WaypointCmd cmd;
+	cmd.position.x = x;
+	cmd.position.y = y;
+	cmd.position.z = z;
 	cmd.yaw[0] = yaw;
-	cmd.wait_time[0] = wait;
-	cmd.duration[0] = getTravTime(q_st.x, x, q_st.y, y, q_st.z, z);
-	cmd.points = 1;
+	cmd.time = getTravTime(odom_.pose.pose.position.x, x, odom_.pose.pose.position.y, y, odom_.pose.pose.position.z, z);
 
 	isDone = false;
 	traj_pub.publish(cmd);
@@ -352,14 +405,12 @@ void sendTrajectory(float wait, float x, float y, float z, float yaw)
 
 void sendRiseTrajectory() 
 {
-	pc_asctec_sim::pc_traj_cmd cmd;
-	cmd.x[0] = 0;
-	cmd.y[0] = 0;
-	cmd.z[0] = 1;
+	asctec_msgs::WaypointCmd cmd;
+	cmd.position.x = 0;
+	cmd.position.y = 0;
+	cmd.position.z = 1;
 	cmd.yaw[0] = 0;
-	cmd.wait_time[0] = 0;
-	cmd.duration[0] = getTravTimeZ(q_st.x, 0, q_st.y, 0, q_st.z, 1);
-	cmd.points = 1;
+	cmd.time = getTravTimeZ(odom_.pose.pose.position.x, 0, odom_.pose.pose.position.y, 0, odom_.pose.pose.position.z, 1);
 
 	isDone = false;
 	traj_pub.publish(cmd);
@@ -367,25 +418,22 @@ void sendRiseTrajectory()
 
 void sendLandTrajectory() 
 {
-	pc_asctec_sim::pc_traj_cmd cmd;
-	cmd.x[0] = 0.0;
-	cmd.y[0] = 0.0;
-	cmd.z[0] = 1.0;
+	asctec_msgs::WaypointCmd cmd;
+	cmd.position.x = 0.0;
+	cmd.position.y = 0.0;
+	cmd.position.z = 1.0;
 	cmd.yaw[0] = 0.0;
-	cmd.wait_time[0] = 0.5;
-	cmd.duration[0] = getTravTime(q_st.x, 0, q_st.y, 0, q_st.z, 1);
+	cmd.time = getTravTime(odom_.pose.pose.position.x, 0, odom_.pose.pose.position.y, 0, odom_.pose.pose.position.z, 1);
+	traj_pub.publish(cmd);
 
-	cmd.x[1] = 0.0;
-	cmd.y[1] = 0.0;
-	cmd.z[1] = 0.0;
-	cmd.yaw[1] = 0.0;
-	cmd.wait_time[1] = 0.0;
-	cmd.duration[1] = 3;
-
-	cmd.points = 2;
+	cmd.position.x = 0.0;
+	cmd.position.y = 0.0;
+	cmd.position.z = 0.0;
+	cmd.yaw[0] = 0.0;
+	cmd.time = 5;
+	traj_pub.publish(cmd);
 
 	isDone = false;
-	traj_pub.publish(cmd);
 }
 
 bool obstacleExists(tf::StampedTransform * transform)
@@ -421,10 +469,11 @@ void showRange(float x, float y, float z)
 
 	ring.header.frame_id = world;
 	ring.header.stamp = ros::Time::now();
+	ring.ns = "avoid_radius";
 	ring.id = 2;
 	ring.action = visualization_msgs::Marker::ADD;
 	ring.type = visualization_msgs::Marker::LINE_LIST;
-	ring.color.a = 1.0;
+	ring.color.a = 0.4;
 	ring.color.g = 1.0;				
 
 	ring.scale.x = 0.05;
@@ -446,7 +495,7 @@ void showRange(float x, float y, float z)
 		}
 	}
 
-	obs_pub.publish(ring);
+	tiki_pub.publish(ring);
 }
 
 void showRealRadius(float x, float y, float z)
@@ -456,10 +505,11 @@ void showRealRadius(float x, float y, float z)
 
 	ring.header.frame_id = world;
 	ring.header.stamp = ros::Time::now();
+	ring.ns = "obs_radius";
 	ring.id = 2;
 	ring.action = visualization_msgs::Marker::ADD;
 	ring.type = visualization_msgs::Marker::LINE_LIST;
-	ring.color.a = 1.0;
+	ring.color.a = 0.4;
 	ring.color.r = 1.0;				
 
 	ring.scale.x = 0.05;
@@ -491,10 +541,11 @@ void showQuadRadius(float x, float y, float z)
 
 	ring.header.frame_id = world;
 	ring.header.stamp = ros::Time::now();
+	ring.ns = "quad_radius";
 	ring.id = 2;
 	ring.action = visualization_msgs::Marker::ADD;
 	ring.type = visualization_msgs::Marker::LINE_LIST;
-	ring.color.a = 1.0;
+	ring.color.a = 0.4;
 	ring.color.b = 1.0;				
 
 	ring.scale.x = 0.05;
@@ -514,7 +565,7 @@ void showQuadRadius(float x, float y, float z)
 		ring.points.push_back(vis_ring);
 	}
 
-	quad_pub.publish(ring);
+	tiki_pub.publish(ring);
 }
 
 int main(int argc, char** argv) {
@@ -526,16 +577,15 @@ int main(int argc, char** argv) {
 	tf::StampedTransform transform;
 	tf::TransformListener listener;
 
-	ros::param::get("~w_frame", world);
-	ros::param::get("~topic", topic);
+	ros::param::get("~world", world);
 	ros::param::get("~obs_frame", obs_frame);
 
-	traj_pub = nh.advertise<asctec_msgs::WaypointCmd>(topic + "/waypoints", 10);
-	tiki_pub = nh.advertise<visualization_msgs::Marker>(topic + "/asctec_viz", 10);
+	traj_pub = nh.advertise<asctec_msgs::WaypointCmd>(ros::this_node::getNamespace()+"/waypoints", 10);
+	tiki_pub = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/asctec_viz", 10);
 
-	traj_sub = nh.subscribe(topic + "/status", 10, trajCallback);
+	traj_sub = nh.subscribe(ros::this_node::getNamespace()+"/status", 10, trajCallback);
 	joy_sub = nh.subscribe("/joy", 10, joyCallback);
-	odom_sub = nh.subscribe(topic + "/odom", 10, odomCallback);
+	odom_sub = nh.subscribe(ros::this_node::getNamespace()+"/odom", 10, odomCallback);
 	
 	listener.waitForTransform(world, obs_frame, ros::Time(0), ros::Duration(3.0));	
 
@@ -558,12 +608,8 @@ int main(int argc, char** argv) {
 					if(targetPointOpen(0,0,&transform)) {
 						ROS_INFO("Taking off!");
 						state = waitHover;
-
-						std_msgs::Bool start;
-						start.data = true;
-						start_pub.publish(start);
-
 						sendRiseTrajectory();
+
 					}else {
 						ROS_INFO("Remove obstacle from center first!");
 						isFlying = false;

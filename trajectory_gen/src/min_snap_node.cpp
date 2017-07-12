@@ -1,8 +1,9 @@
 #include <min_snap.h>
 #include "min_snap.cpp"
 
-ros::Publisher pos_goal, status, wp_viz;
 MinSnap min_snap;
+bool continuous = true;
+ros::Publisher pos_goal, status, wp_viz;
 
 /* -------------------- callbacks -------------------- */
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg)
@@ -22,7 +23,7 @@ void timerCallback(const ros::TimerEvent& event)
 	std_msgs::Bool temp;
 	temp.data = min_snap.getStatus();
 	status.publish(temp);
-	if(!temp.data) {
+	if(!temp.data || continuous) {
 		pos_goal.publish(*min_snap.getNextCommand());
 		wp_viz.publish(*min_snap.getMarker());
 	}
@@ -35,6 +36,7 @@ int main(int argc, char** argv) {
 	/* -------------------- roslaunch parameter values -------------------- */
 	float rate = 20;
   ros::param::get("~rate", rate);
+	ros::param::get("~continuous", continuous);
   
 	/* -------------------- Timer, Publishers, and Subscribers -------------------- */
   ros::Timer timer = nh.createTimer(ros::Duration(1/rate), timerCallback);
@@ -42,7 +44,7 @@ int main(int argc, char** argv) {
   status = nh.advertise<std_msgs::Bool>(ros::this_node::getNamespace()+"/status", 10);							 																			// Trajectory completion status
   wp_viz = nh.advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/asctec_viz", 10);
 
-  ros::Subscriber odom_sub = nh.subscribe(ros::this_node::getNamespace()+"/odom", 1, odomCallback);																				// Odometry data
+  ros::Subscriber odom_sub = nh.subscribe(ros::this_node::getNamespace()+"/odom", 10, odomCallback);																				// Odometry data
   ros::Subscriber wpt_sub = nh.subscribe(ros::this_node::getNamespace()+"/waypoints", 100, waypointCallback);															// Waypoint data
 
 	ros::spin();

@@ -5,8 +5,8 @@
 		required="true"
 		output="screen">
 		<param name="mass" value="0.55"/>
-		<rosparam param="gains/pos">[3, 3, 8.2]</rosparam>
+		<rosparam param="gains/pos">[4, 4, 8.2]</rosparam>
 		<rosparam param="gains/vel">[3, 3, 4.5]</rosparam>
-		<rosparam param="gains/yaw">0.8</rosparam>
+		<rosparam param="gains/yaw">1.3</rosparam>
 	</node>
 </launch>

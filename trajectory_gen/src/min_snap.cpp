@@ -7,16 +7,6 @@ MinSnap::MinSnap()
  /* Trajectory class constructor
   * - Holds A, B, X, T matricies
   * - Can return next waypoint upon call
-	*	-			7		 6		5		 4		3		2		1		0
-	*	-			---------------------------------	
-	* - A= [0		 0		0		 0 		0 	0 	0 	1		0 | 0
-	*	-			1 	 1		1 	 1 		1 	1 	1   1 	0	|	1 - t
-	*	-			0 	 0		0 	 0 		0 	0 	1 	0		2	|	2
-	* -			7		 6		5		 4		3		2		1		0		0	| 3	- dt
-	* -			0 	 0 	  0		 0		0		2		0		0		0	| 4
-	* -			42 	 30		20	 12		6		2		0		0		0	|	5	- dt^2
-	* -			0 	 0		0		 0		6		0		0		0		0	|	6
-	* -			252  120	60 	 24		6		0		0		0		0	|	7	- dt^3
   */
 
 	A = MatrixXf::Zero(8,8);
@@ -68,7 +58,7 @@ void MinSnap::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
     Bz(4,0) = 0.0;
     Bz(6,0) = 0.0;
 
-  	Byaw(0,0) = odom_.pose.pose.orientation.z;
+  	Byaw(0,0) = tf::getYaw(odom_.pose.pose.orientation);
     Byaw(2,0) = odom_.twist.twist.angular.z;
     Byaw(4,0) = 0.0;
     Byaw(6,0) = 0.0;
@@ -120,7 +110,7 @@ void MinSnap::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
 		A(1,7-i) = pow(time,i);
 		A(3,7-i) = i*pow(time,i-1);
 		A(5,7-i) = i*(i-1)*pow(time,i-2);
-		A(7,7-i) = i*(i-2)*pow(time,i-3);
+		A(7,7-i) = i*(i-1)*(i-2)*pow(time,i-3);
 	}
 
   MatrixXf * x = new MatrixXf;
@@ -164,6 +154,7 @@ visualization_msgs::Marker *MinSnap::deleteMarker(void) {
 }
 
 visualization_msgs::Marker *MinSnap::getMarker(void) {
+	if(T.size() == 0) return &path_;
 	double ts = ros::Time::now().toSec() - t0.toSec();
 	if(ts >= T.front()) ts = T.front();
 	path_.points.clear();
