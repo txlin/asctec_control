@@ -9,6 +9,14 @@ MinAccel::MinAccel()
   * - Can return next waypoint upon call
   */
 
+ /*	Initialize A constants, calculate time components later
+	*	0.0  0.0  0.0  1.0
+	*	t^3  t^2  t 	 1.0
+	*	0.0  0.0  1.0  0.0
+	*	3t^2 2t 	2.0	 0.0
+	* Initialize empty B matricies
+	*/
+
 	A = MatrixXf::Zero(4,4);
 	A(0,3) = 1.0;
 	A(2,2) = 1.0; 
@@ -17,6 +25,10 @@ MinAccel::MinAccel()
 	By = MatrixXf::Zero(4,1);
   Bz = MatrixXf::Zero(4,1);
 	Byaw = MatrixXf::Zero(4,1);
+
+ /*	Initialize trajectory marker
+	*	color differentiation between snap, jerk, accel
+	*/
 
 	path_.header.frame_id = odom_.header.frame_id;
 	path_.type = visualization_msgs::Marker::CUBE_LIST;
@@ -37,10 +49,26 @@ void MinAccel::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
   * Calculate new X matrix and add to X vector
   * Set init based on if continuing or starting a trajectory
   */
+
 	if(!wp->time && (!wp->desV || !wp->desA)) { ROS_INFO("Ignored: Time = 0 and no decision parameters set"); return;}
 	float time = wp->time;
 	if(!time) time = setTime(wp, wp->desV, wp->desA);
+	 /*	Calculate a time estimate based on theoretical desired velocity and acceleration
+		*/
+
+ /*	Initialize A constants, calculate time components later
+	*	0.0  0.0  0.0  1.0
+	*	t^3  t^2  t 	 1.0
+	*	0.0  0.0  1.0  0.0
+	*	3t^2 2t 	2.0	 0.0
+	* Initialize empty B matricies
+	*/
+
   if(T.size() == 0) {
+	 /*	Set B matrix according to current state
+		* reset t0 for spline position goal extraction
+		*/
+
   	Bx(0,0) = odom_.pose.pose.position.x;
     Bx(2,0) = odom_.twist.twist.linear.x;
    
@@ -56,6 +84,9 @@ void MinAccel::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
     t0 = ros::Time::now();
 
   }else {
+	 /*	Set B matrix according to last segment's final state
+		*/
+
   	Bx(0,0) = Bx(1,0);
     Bx(2,0) = Bx(3,0);
       
@@ -69,7 +100,9 @@ void MinAccel::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
     Byaw(2,0) = Byaw(3,0);
 
   }
-  Bx(1,0) = wp->position.x;
+ /*	Set B matrix final state
+	*/
+  Bx(1,0) = wp->position.x;																		
   Bx(3,0) = wp->velocity.x;
     
   By(1,0) = wp->position.y;
@@ -81,12 +114,24 @@ void MinAccel::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
   Byaw(1,0) = wp->yaw[0];
   Byaw(3,0) = wp->yaw[1];
 
-	for(int i=3; i>=0; i--) {
+ /*	Set A matrix according to calculated time
+ 	*	-----------
+	*	t^3 t^2 t 1
+	*	-----------
+	*	3t^2 2t 2 0
+	*/
+
+	for(int i=3; i>=0; i--) {																		
 		A(1,3-i) = pow(time,i);
 		A(3,3-i) = i*pow(time,i-1);
 	}
 
-  MatrixXf * x = new MatrixXf;
+ /*	Solve X matricies for x,y,z,yaw
+	*	Store X result in vector 
+	*	Store time result in time vector for evaluation
+	*/
+
+  MatrixXf * x = new MatrixXf;																
 	*x = A.colPivHouseholderQr().solve(Bx);
 	Xx.push_back(x);
 
@@ -110,10 +155,17 @@ void MinAccel::setState(const nav_msgs::Odometry::ConstPtr& odom) {
 }
 
 bool MinAccel::getStatus(void) {
+ /*	Check if trajectory is completed
+	*/
 	return T.size() == 0;
 }
 
 float MinAccel::setTime(const asctec_msgs::WaypointCmd::ConstPtr& cmd, float desV, float desA) {
+ /*	Self-calculation of spline duration
+	* based on desired velocity and acceleration
+	* calculates time as a trapezoid, time to ramp up to desV based on desA
+	*/
+
 	float tA0 = std::sqrt(std::pow((odom_.twist.twist.linear.x - desV)/desA,2)+std::pow((odom_.twist.twist.linear.y - desV)/desA,2));
 	float tAf = std::sqrt(std::pow((cmd->velocity.x - desV)/desA,2)+std::pow((cmd->velocity.y - desV)/desA,2));
 	float tD = std::sqrt(std::pow(cmd->position.x-odom_.pose.pose.position.x,2)+std::pow(cmd->position.y-odom_.pose.pose.position.y,2))/desV;
@@ -121,12 +173,20 @@ float MinAccel::setTime(const asctec_msgs::WaypointCmd::ConstPtr& cmd, float des
 }
 
 visualization_msgs::Marker *MinAccel::deleteMarker(void) {
+ /*	Empty and clear visualization marker
+	*/
+
 	path_.points.clear();
 	path_.action = 3;
 	return &path_;
 }
 
 visualization_msgs::Marker *MinAccel::getMarker(void) {
+ /*	rebuild marker msg according to remaining points
+	* points added at 10hz intervals
+	* returns an empty marker if no trajectory is running
+	*/
+
 	if(T.size() == 0) return &path_;
 	double ts = ros::Time::now().toSec() - t0.toSec();
 	if(ts >= T.front()) ts = T.front();
@@ -148,6 +208,10 @@ visualization_msgs::Marker *MinAccel::getMarker(void) {
 }
 
 void MinAccel::resetWaypoints(void) {
+ /*	deallocate memory and flush X matrix vector buffers
+	* called when waypointcmd reset boolean is set
+	*/
+
 	if(T.size() == 0) return;
 	ROS_INFO("Clearing %i waypoints...", int(T.size()));
 
@@ -163,7 +227,14 @@ void MinAccel::resetWaypoints(void) {
   T.clear();
 }
 
-asctec_msgs::PositionCmd* MinAccel::getNextCommand(void) {  		
+asctec_msgs::PositionCmd* MinAccel::getNextCommand(void) { 
+ /*	calculates next position goal according to current time
+	* when switching splines, deletes spline point and resets time
+	* returns next position as asctec_msgs::PositionCmd
+	* currently does not control yaw
+	* TODO: Change spline deletion from online to after completion
+	*/
+ 		
   if(T.size() != 0) {
   	double t = ros::Time::now().toSec() - t0.toSec();
     if(t >= T.front()) {

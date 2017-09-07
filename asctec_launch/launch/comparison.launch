@@ -2,12 +2,14 @@
 	<arg name="group_acc" value="asctec_acc" />
 	<arg name="group_jerk" value="asctec_jerk" />
 	<arg name="group_snap" value="asctec_snap" />
+	<arg name="linear" value="true" />
 	<arg name="sim" value="true"/>
 
 	<group ns="$(arg group_acc)">
 		<include file="$(find asctec_launch)/basic_launch/min_acc.launch">
         <arg name="group_ns" value="$(arg group_acc)" /> 
         <arg name="frame" value="/hummingbird_1" /> 
+				<arg name="linear" value="$(arg linear)"/>
         <arg name="sim" value="$(arg sim)" /> 
     </include>
 
@@ -22,6 +24,7 @@
 		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
         <arg name="group_ns" value="$(arg group_jerk)" /> 
         <arg name="frame" value="/hummingbird_2" /> 
+				<arg name="linear" value="$(arg linear)"/>
         <arg name="sim" value="$(arg sim)" /> 
         <arg name="viz" value="false" /> 
     </include>
@@ -37,6 +40,7 @@
 		<include file="$(find asctec_launch)/basic_launch/min_snap.launch">
         <arg name="group_ns" value="$(arg group_snap)" /> 
         <arg name="frame" value="/hummingbird_3" />  
+				<arg name="linear" value="$(arg linear)"/>
         <arg name="sim" value="$(arg sim)" />
         <arg name="viz" value="false" /> 
     </include>

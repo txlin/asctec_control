@@ -221,6 +221,7 @@ void showBorder(bool outOf, float z)
 	border.header.frame_id = world;
 	border.header.stamp = ros::Time::now();
 	border.id = 2;
+	border.ns = "border";
 	border.action = visualization_msgs::Marker::ADD;
 	border.type = visualization_msgs::Marker::LINE_LIST;
 
@@ -417,7 +418,7 @@ asctec_msgs::SICmd * setHRIBehavior(tf::StampedTransform * transform)
 
 bool isWandDown(tf::StampedTransform * transform)
 {
-	return transform->getOrigin().z() < 0.3;
+	return transform->getOrigin().z() < 0.2;
 }
 
 bool isWandUp(tf::StampedTransform * transform)
@@ -455,7 +456,7 @@ int main(int argc, char** argv) {
 	while(ros::ok()) {
 		ros::spinOnce();
 		showBorder(outBorder(), BORDER_TOP);
-		showSBorder(outSBorder(), BORDER_TOP);
+		//showSBorder(outSBorder(), BORDER_TOP);
 
 		listener.lookupTransform(world, wand, ros::Time(0), transform);
     asctec_msgs::SICmd new_cmd = nl_cmd;

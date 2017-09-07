@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <asctec_msgs/WaypointCmd.h>
 #include <std_msgs/Bool.h>
+#include "../../../../devel/include/asctec_msgs/WaypointCmd.h"
 
 #define maxV 1.7
 #define maxA 1.7

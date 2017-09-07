@@ -22,7 +22,9 @@ using Eigen::MatrixXf;
 class MinJerk
 {
 	public:
-		MinJerk();
+		MinJerk(ros::NodeHandle *n, bool continuous_);
+		MinJerk(ros::NodeHandle *n, bool continuous_, int id, bool type);
+
 		asctec_msgs::PositionCmd* getNextCommand(void);
 		void setState(const nav_msgs::Odometry::ConstPtr& odom);
 		visualization_msgs::Marker *getMarker(void);
@@ -34,11 +36,20 @@ class MinJerk
 
 	private:
   	ros::Time t0;
+		bool continuous;
     std::vector<MatrixXf *> Xx, Xy, Xz, Xyaw;
-
 		std::vector<float> T;
 		MatrixXf A;
   	MatrixXf Bx, By, Bz, Byaw;
+
+		ros::Timer timer;
+		ros::Subscriber odom_sub, wpt_sub;
+		ros::Publisher pos_goal, status, wp_viz;
+
+		void odomCallback(const nav_msgs::Odometry::ConstPtr& msg);
+		void waypointCallback(const asctec_msgs::WaypointCmd::ConstPtr& msg);
+		void timerCallback(const ros::TimerEvent& event);
+
     nav_msgs::Odometry odom_;
   	asctec_msgs::PositionCmd cmd_;
 		visualization_msgs::Marker path_;

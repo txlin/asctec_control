@@ -26,9 +26,9 @@
 #define quad_r 0.27     //21 inches diameter
 
 #define freq 10
-#define maxV 0.25
+#define maxV 0.4
 #define maxVZ 0.2
-#define maxA 0.1
+#define maxA 0.2
 
 using namespace std;
 

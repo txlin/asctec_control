@@ -8,8 +8,8 @@ ros::Timer timer;
 asctec_msgs::WaypointCmd waypoint;
 asctec_msgs::WaypointCmd last_waypoint;
 
-const float maxV = 0.7;
-const float maxA = 0.5;
+const float maxV = 4.5;
+const float maxA = 3.5;
 
 bool timing = false;
 bool first = true;
@@ -35,13 +35,13 @@ void statusCallback(const std_msgs::Bool::ConstPtr& msg)
 	if(!msg->data && first) {
 		first = false;
 		waypoint.position.y = 1.0;
-		waypoint.desV = maxV;
-		waypoint.desA = maxA;
+		//waypoint.desV = maxV;
+		//waypoint.desA = maxA;
 	}
   if(msg->data && !timing && !first) {
 		waypoint.header.stamp = ros::Time::now();
 		waypoint.position.y = -waypoint.position.y;
-		//waypoint.time = timeEstimate(&last_waypoint, &waypoint, maxV, maxA);
+		waypoint.time = 2.5;
 		waypoints.publish(waypoint);
 		last_waypoint = waypoint;
 	}

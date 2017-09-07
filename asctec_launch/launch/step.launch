@@ -6,7 +6,7 @@
 	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
 
 	<group ns="$(arg group_ns)">
-		<include file="$(find asctec_launch)/basic_launch/min_acc.launch">
+		<include file="$(find asctec_launch)/basic_launch/min_snap.launch">
 				<arg name="viz" value="true" />
         <arg name="group_ns" value="$(arg group_ns)" /> 
         <arg name="linear" value="$(arg linear)" />
