@@ -2,7 +2,7 @@
 
 using Eigen::MatrixXf;
 
-MinJerk::MinJerk(ros::NodeHandle *n, bool continuous_)
+MinJerk::MinJerk()
 {
  /* Trajectory class constructor
   * - Holds A, B, X, T matricies
@@ -27,7 +27,7 @@ MinJerk::MinJerk(ros::NodeHandle *n, bool continuous_)
   Bz = MatrixXf::Zero(6,1);
 	Byaw = MatrixXf::Zero(6,1);
 
-	continuous = continuous_;
+	
  /*	Initialize trajectory marker
 	*	color differentiation between snap, jerk, accel
 	*/
@@ -43,69 +43,24 @@ MinJerk::MinJerk(ros::NodeHandle *n, bool continuous_)
 	path_.color.a = 0.65;
 	path_.color.r = 1.0;
 	path_.color.b = 0.3;
+	continuous = false;
+}
 
-	timer = n->createTimer(ros::Duration(1/20), &MinJerk::timerCallback, this);
-	odom_sub = n->subscribe(ros::this_node::getNamespace()+"/odom", 10, &MinJerk::odomCallback, this);
+void MinJerk::setPubSub(ros::NodeHandle *n, float rate)
+{
+  timer = n->createTimer(ros::Duration(1/rate), &MinJerk::timerCallback, this);
 	wpt_sub = n->subscribe(ros::this_node::getNamespace()+"/waypoints", 100, &MinJerk::waypointCallback, this);
+	odom_sub = n->subscribe(ros::this_node::getNamespace()+"/odom", 10, &MinJerk::odomCallback, this);
 
-	pos_goal = n->advertise<asctec_msgs::PositionCmd>(ros::this_node::getNamespace()+"/position_cmd", 10); 
-	status = n->advertise<std_msgs::Bool>(ros::this_node::getNamespace()+"/status", 10);
-	wp_viz = n->advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/asctec_viz", 10);
+  pos_goal = n->advertise<asctec_msgs::PositionCmd>(ros::this_node::getNamespace()+"/position_cmd", 10); 																	// Position goals to linear and nonlinear controllers
+  status = n->advertise<std_msgs::Bool>(ros::this_node::getNamespace()+"/status", 10);							 																			// Trajectory completion status
+  wp_viz = n->advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/asctec_viz", 10);
 }
 
-MinJerk::MinJerk(ros::NodeHandle *n, bool continuous_, int id, bool type)
+void MinJerk::setCont(bool cont_)
 {
- /* Trajectory class constructor
-  * - Holds A, B, X, T matricies
-  * - Can return next waypoint upon call
-  */
-
- /*	Initialize A constants, calculate time components later
-	*	0.0  0.0  0.0  1.0
-	*	t^3  t^2  t 	 1.0
-	*	0.0  0.0  1.0  0.0
-	*	3t^2 2t 	2.0	 0.0
-	* Initialize empty B matricies
-	*/
-
-	A = MatrixXf::Zero(6,6);
-	A(0,5) = 1.0;
-	A(2,4) = 1.0;
-	A(4,3) = 2.0; 
-
-	Bx = MatrixXf::Zero(6,1);
-	By = MatrixXf::Zero(6,1);
-  Bz = MatrixXf::Zero(6,1);
-	Byaw = MatrixXf::Zero(6,1);
-
-	continuous = continuous_;
- /*	Initialize trajectory marker
-	*	color differentiation between snap, jerk, accel
-	*/
-
-	path_.header.frame_id = odom_.header.frame_id;
-	path_.type = visualization_msgs::Marker::CUBE_LIST;
-	path_.action = visualization_msgs::Marker::ADD;
-	path_.ns = "path_jerk";
-	path_.id = 0;
-	path_.scale.x = 0.0125;
-	path_.scale.y = 0.0125;
-	path_.scale.z = 0.0125;
-	path_.color.a = 0.65;
-	path_.color.r = 1.0;
-	path_.color.b = 0.3;
-
-	timer = n->createTimer(ros::Duration(1/20), &MinJerk::timerCallback, this);
-	std::string pre = "ugv";
-	if(type) pre = "uav";
-	odom_sub = n->subscribe(pre+"/odom", 10, &MinJerk::odomCallback, this);
-	wpt_sub = n->subscribe(pre+"/waypoints", 100, &MinJerk::waypointCallback, this);
-
-	pos_goal = n->advertise<asctec_msgs::PositionCmd>(pre+"/position_cmd", 10); 
-	status = n->advertise<std_msgs::Bool>(pre+"/status", 10);
-	wp_viz = n->advertise<visualization_msgs::Marker>("/sim_vis", 10);
+	continuous = cont_;
 }
-
 
 void MinJerk::odomCallback(const nav_msgs::Odometry::ConstPtr& msg)
 {
@@ -117,6 +72,7 @@ void MinJerk::waypointCallback(const asctec_msgs::WaypointCmd::ConstPtr& msg)
 	if(msg->reset) resetWaypoints();
 	if(msg->reset) wp_viz.publish(*deleteMarker());
 	addWaypoint(msg);
+	wp_viz.publish(*getMarker());
 }
 
 void MinJerk::timerCallback(const ros::TimerEvent& event)
@@ -126,7 +82,6 @@ void MinJerk::timerCallback(const ros::TimerEvent& event)
 	status.publish(temp);
 	if(!temp.data || continuous) {
 		pos_goal.publish(*getNextCommand());
-		wp_viz.publish(*getMarker());
 	}
 }
 

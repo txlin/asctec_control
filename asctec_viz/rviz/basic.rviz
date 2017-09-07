@@ -55,8 +55,6 @@ Visualization Manager:
         All Enabled: false
         odom:
           Value: true
-        vicon/hri_wand/hri_wand:
-          Value: true
         vicon/hummingbird_1/hummingbird_1:
           Value: true
         vicon/jackal1/jackal1:
@@ -68,8 +66,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         odom:
-          vicon/hri_wand/hri_wand:
-            {}
           vicon/hummingbird_1/hummingbird_1:
             {}
           vicon/jackal1/jackal1:
@@ -81,11 +77,8 @@ Visualization Manager:
       Marker Topic: /asctec/asctec_viz
       Name: Marker
       Namespaces:
-        border: true
         hbird_mesh: true
-        path_jerk: true
-        trajectory: true
-        waypoints: true
+        ugv_border: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -112,22 +105,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 4.2844
+      Distance: 3.45796
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.148664
-        Y: -1.14951
-        Z: -1.3113e-06
+        X: 0.449905
+        Y: -0.302737
+        Z: -1.07288e-06
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.740401
+      Pitch: 0.405401
       Target Frame: <Fixed Frame>
       Value: ThirdPersonFollower (rviz)
-      Yaw: 5.13355
+      Yaw: 5.64355
     Saved: ~
 Window Geometry:
   Displays:

@@ -31,6 +31,23 @@ MinSnap::MinSnap()
 	path_.color.a = 0.65;
 	path_.color.g = 1.0;
 	path_.color.b = 1.0;
+	continuous = false;
+}
+
+void MinSnap::setPubSub(ros::NodeHandle *n, float rate)
+{
+  timer = n->createTimer(ros::Duration(1/rate), &MinSnap::timerCallback, this);
+	wpt_sub = n->subscribe(ros::this_node::getNamespace()+"/waypoints", 100, &MinSnap::waypointCallback, this);
+	odom_sub = n->subscribe(ros::this_node::getNamespace()+"/odom", 10, &MinSnap::odomCallback, this);
+
+  pos_goal = n->advertise<asctec_msgs::PositionCmd>(ros::this_node::getNamespace()+"/position_cmd", 10); 																	// Position goals to linear and nonlinear controllers
+  status = n->advertise<std_msgs::Bool>(ros::this_node::getNamespace()+"/status", 10);							 																			// Trajectory completion status
+  wp_viz = n->advertise<visualization_msgs::Marker>(ros::this_node::getNamespace()+"/asctec_viz", 10);
+}
+
+void MinSnap::setCont(bool cont_)
+{
+	continuous = cont_;
 }
 
 void MinSnap::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
@@ -233,4 +250,27 @@ asctec_msgs::PositionCmd* MinSnap::getNextCommand(void) {
     }
   }
   return &cmd_;
+}
+
+void MinSnap::odomCallback(const nav_msgs::Odometry::ConstPtr& msg)
+{
+  setState(msg);
+}
+
+void MinSnap::waypointCallback(const asctec_msgs::WaypointCmd::ConstPtr& msg)
+{
+	if(msg->reset) resetWaypoints();
+	if(msg->reset) wp_viz.publish(*deleteMarker());
+	addWaypoint(msg);
+	wp_viz.publish(*getMarker());
+}
+
+void MinSnap::timerCallback(const ros::TimerEvent& event)
+{
+	std_msgs::Bool temp;
+	temp.data = getStatus();
+	status.publish(temp);
+	if(!temp.data || continuous) {
+		pos_goal.publish(*getNextCommand());
+	}
 }

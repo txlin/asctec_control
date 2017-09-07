@@ -6,10 +6,14 @@ int main(int argc, char** argv) {
 	ros::NodeHandle nh;
 
 	/* -------------------- roslaunch parameter values -------------------- */
+	float rate = 20;
 	bool continuous = true;
+	ros::param::get("~rate", rate);
   ros::param::get("~continuous", continuous);
 
-	MinJerk min_jerk(&nh, continuous);
+	MinJerk min_jerk;
+	min_jerk.setPubSub(&nh, rate);
+	min_jerk.setCont(continuous);
 
 	ros::spin();
 	return 0;

@@ -22,9 +22,7 @@ using Eigen::MatrixXf;
 class MinJerk
 {
 	public:
-		MinJerk(ros::NodeHandle *n, bool continuous_);
-		MinJerk(ros::NodeHandle *n, bool continuous_, int id, bool type);
-
+		MinJerk();
 		asctec_msgs::PositionCmd* getNextCommand(void);
 		void setState(const nav_msgs::Odometry::ConstPtr& odom);
 		visualization_msgs::Marker *getMarker(void);
@@ -33,14 +31,20 @@ class MinJerk
 		void addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp);
 		void resetWaypoints(void);
 		bool getStatus(void);
+		void setPubSub(ros::NodeHandle *n, float rate);
+		void setCont(bool cont_);
 
 	private:
-  	ros::Time t0;
 		bool continuous;
+  	ros::Time t0;	
     std::vector<MatrixXf *> Xx, Xy, Xz, Xyaw;
+
 		std::vector<float> T;
 		MatrixXf A;
   	MatrixXf Bx, By, Bz, Byaw;
+		nav_msgs::Odometry odom_;
+  	asctec_msgs::PositionCmd cmd_;
+		visualization_msgs::Marker path_;
 
 		ros::Timer timer;
 		ros::Subscriber odom_sub, wpt_sub;
@@ -49,9 +53,5 @@ class MinJerk
 		void odomCallback(const nav_msgs::Odometry::ConstPtr& msg);
 		void waypointCallback(const asctec_msgs::WaypointCmd::ConstPtr& msg);
 		void timerCallback(const ros::TimerEvent& event);
-
-    nav_msgs::Odometry odom_;
-  	asctec_msgs::PositionCmd cmd_;
-		visualization_msgs::Marker path_;
 };
 #endif
