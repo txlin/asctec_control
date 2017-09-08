@@ -1,17 +1,18 @@
 <launch>
 	<arg name="group_ns" default="asctec" />
-  <arg name="port" default="/dev/ttyUSB0" />
-  <arg name="frame" default="/vicon/hummingbird_1/hummingbird_1" />
+  <arg name="port" default="/dev/ttyS3" />
+  <arg name="frame" default="/vicon/pelican_gr/pelican_gr" />
   <arg name="world" default="/odom" />
 	<arg name="rviz" default="basic.rviz"/>
-	<arg name="viz" default="true"/>
+	<arg name="viz" default="false"/>
 	<arg name="mesh" default="package://mesh_visualization/meshes/hummingbird.mesh"/>
 	<arg name="linear" default="false"/>
 	<arg name="continuous" default="true"/>
 	<arg name="sim" default="false"/>
 
-	<include file="$(find asctec_launch)/basic_launch/nonlinear.launch" unless="$(arg linear)"/>
-	<include file="$(find asctec_launch)/basic_launch/linear.launch" if="$(arg linear)"/>
+	<include file="$(find asctec_launch)/basic_launch/pelican/nonlinear.launch" unless="$(arg linear)"/>
+	<include file="$(find asctec_launch)/basic_launch/pelican/linear.launch" if="$(arg linear)"/>
+
 	<node name="rviz" pkg="rviz" type="rviz" if="$(arg viz)" args="-d $(find asctec_viz)/rviz/$(arg rviz)" />
 
 	<node pkg="asctec_viz"
@@ -21,8 +22,8 @@
 	</node>
 
 	<node pkg="trajectory_gen"
-	  type="min_jerk_node"
-	  name="min_jerk"
+	  type="min_accel_node"
+	  name="min_accel"
 	  required="true"
 	  output="screen">
 	  <param name="rate" value="15"/>
@@ -34,7 +35,7 @@
 	   <param name="ll_status_rate" value="1"/>
 	   <param name="imu_calc_data_rate" value="0"/>
 	   <param name="rc_data_rate" value="0"/>
-	   <param name="ctrl_out_rate" value="10"/>
+	   <param name="ctrl_out_rate" value="20"/>
 	   <param name="gps_data_advanced_rate" value="0"/>
 	</node>
 

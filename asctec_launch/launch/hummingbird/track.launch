@@ -7,7 +7,7 @@
 	<node pkg="joy" type="joy_node" name="joystick"/>
 
 	<group ns="$(arg group_ns)">
-		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
+		<include file="$(find asctec_launch)/basic_launch/hummingbird/min_jerk.launch">
       <arg name="group_ns" value="$(arg group_ns)" /> 
 			<arg name="viz" value="true"/>
 			<arg name="continuous" value="false" />
