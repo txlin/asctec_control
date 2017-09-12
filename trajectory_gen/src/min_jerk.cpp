@@ -98,7 +98,7 @@ void MinJerk::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
 	 /*	Calculate a time estimate based on theoretical desired velocity and acceleration
 		*/
 
-  if(T.size() == 0) {
+  if(T.size() == 0 && !wp->cont) {
 	 /*	Set B matrix according to current state
 		* reset t0 for spline position goal extraction
 		*/
@@ -161,6 +161,14 @@ void MinJerk::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
   Byaw(3,0) = wp->yaw[1];
   Byaw(5,0) = wp->yaw[2];
 
+	if (Byaw(1,0) - Byaw(0,0) > M_PI) {
+		Byaw(1,0) -= 2*M_PI;
+
+	}else if (Byaw(1,0) - Byaw(0,0) < -M_PI) {
+		Byaw(1,0) += 2*M_PI;
+
+	}
+
  /*	Set A matrix according to calculated time
  	*	-----------------
 	*	t^4  t^3  t^2 t 1
@@ -196,6 +204,7 @@ void MinJerk::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
 	Xyaw.push_back(yaw);
 
   T.push_back(time);
+	lock.push_back(wp->lock_yaw);
 }
 
 void MinJerk::setState(const nav_msgs::Odometry::ConstPtr& odom) {
@@ -315,12 +324,13 @@ asctec_msgs::PositionCmd* MinJerk::getNextCommand(void) {
         cmd.velocity.z += i*Xz.front()->operator()(5-i,0)*pow(t,i-1);
         cmd.accel.z += i*(i-1)*Xz.front()->operator()(5-i,0)*pow(t,i-2);
 
-        cmd.yaw[0] += Xyaw.front()->operator()(5-i,0)*pow(t,i);
-        cmd.yaw[1] += i*Xyaw.front()->operator()(5-i,0)*pow(t,i-1);
-        cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(5-i,0)*pow(t,i-2);
-
+				if(!lock.front()) {
+		      cmd.yaw[0] += Xyaw.front()->operator()(5-i,0)*pow(t,i);
+		      cmd.yaw[1] += i*Xyaw.front()->operator()(5-i,0)*pow(t,i-1);
+		      cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(5-i,0)*pow(t,i-2);
+				}
       }
-			cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
+			//cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
       cmd_ = cmd;
     }
   }

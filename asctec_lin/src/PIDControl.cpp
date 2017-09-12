@@ -79,7 +79,8 @@ void PIDControl::calculateControl(const Eigen::Vector3d &des_pos,
   trpy_(0) = force_des(2) + mass_*g_;
   trpy_(1) = roll_des;
   trpy_(2) = pitch_des;
-  trpy_(3) = k_yaw_*e_yaw + ki_yaw*yaw_int_;
+  //trpy_(3) = k_yaw_*e_yaw + ki_yaw*yaw_int_;
+	trpy_(3) = des_yaw;
 }
 
 const Eigen::Vector4d &PIDControl::getControls(void)

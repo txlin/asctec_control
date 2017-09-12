@@ -39,6 +39,7 @@ class MinAccel
   	ros::Time t0;
     std::vector<MatrixXf *> Xx, Xy, Xz, Xyaw;
 
+		std::vector<bool> lock;
 		std::vector<float> T;
 		MatrixXf A;
   	MatrixXf Bx, By, Bz, Byaw;

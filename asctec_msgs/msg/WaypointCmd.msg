@@ -9,3 +9,5 @@ float64 time
 float64 desV
 float64 desA
 bool reset
+bool lock_yaw
+bool cont

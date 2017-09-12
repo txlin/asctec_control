@@ -59,7 +59,7 @@ void MinSnap::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
 	if(!wp->time && (!wp->desV || !wp->desA)) { ROS_INFO("Ignored: Time = 0 and no decision parameters set"); return;}
 	float time = wp->time;
 	if(!time) time = setTime(wp, wp->desV, wp->desA);
-  if(T.size() == 0) {
+  if(T.size() == 0 && !wp->cont) {
   	Bx(0,0) = odom_.pose.pose.position.x;
     Bx(2,0) = odom_.twist.twist.linear.x;
     Bx(4,0) = 0.0;
@@ -123,6 +123,15 @@ void MinSnap::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
   Byaw(3,0) = wp->yaw[1];
   Byaw(5,0) = wp->yaw[2];
 
+	if (Byaw(1,0) - Byaw(0,0) > M_PI) {
+		Byaw(1,0) -= 2*M_PI;
+
+	}else if (Byaw(1,0) - Byaw(0,0) < -M_PI) {
+		Byaw(1,0) += 2*M_PI;
+
+	}
+
+
 	for(int i=7; i>=0; i--) {
 		A(1,7-i) = pow(time,i);
 		A(3,7-i) = i*pow(time,i-1);
@@ -147,6 +156,7 @@ void MinSnap::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
 	Xyaw.push_back(yaw);
 
   T.push_back(time);
+	lock.push_back(wp->lock_yaw);
 }
 
 void MinSnap::setState(const nav_msgs::Odometry::ConstPtr& odom) {
@@ -240,12 +250,13 @@ asctec_msgs::PositionCmd* MinSnap::getNextCommand(void) {
         cmd.velocity.z += i*Xz.front()->operator()(7-i,0)*pow(t,i-1);
         cmd.accel.z += i*(i-1)*Xz.front()->operator()(7-i,0)*pow(t,i-2);
 
-        cmd.yaw[0] += Xyaw.front()->operator()(7-i,0)*pow(t,i);
-        cmd.yaw[1] += i*Xyaw.front()->operator()(7-i,0)*pow(t,i-1);
-        cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(7-i,0)*pow(t,i-2);
-
+				if(!lock.front()) {
+		      cmd.yaw[0] += Xyaw.front()->operator()(7-i,0)*pow(t,i);
+		      cmd.yaw[1] += i*Xyaw.front()->operator()(7-i,0)*pow(t,i-1);
+		      cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(7-i,0)*pow(t,i-2);
+				}
       }
-			cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
+			//cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
       cmd_ = cmd;
     }
   }

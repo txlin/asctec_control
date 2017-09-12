@@ -4,6 +4,7 @@
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
 
+int rollover = 0;
 ros::Time past;
 ros::Publisher odom_pub;
 nav_msgs::Odometry odom;
@@ -17,6 +18,24 @@ void viconCallback(const geometry_msgs::TransformStamped::ConstPtr &msg)
 	odom.twist.twist.linear.x = (msg->transform.translation.x-odom.pose.pose.position.x)/dt;
 	odom.twist.twist.linear.y = (msg->transform.translation.y-odom.pose.pose.position.y)/dt;
 	odom.twist.twist.linear.z = (msg->transform.translation.z-odom.pose.pose.position.z)/dt;
+
+	nav_msgs::Odometry dummy;
+	dummy.pose.pose.orientation = msg->transform.rotation;
+	tf::Pose pose;
+  tf::poseMsgToTF(dummy.pose.pose, pose);
+  double yaw = tf::getYaw(pose.getRotation());
+	tf::poseMsgToTF(odom.pose.pose, pose);
+  double yaw2 = tf::getYaw(pose.getRotation());
+	if (yaw - yaw2 > M_PI)	{
+		rollover++;
+	}else if (yaw - yaw2 < -M_PI) {
+		rollover--;
+	}else {
+		rollover = 0;
+	}
+	yaw2 += 2*M_PI*rollover;
+	odom.twist.twist.angular.z = (yaw-yaw2)/dt;
+
 	odom.pose.pose.position.x = msg->transform.translation.x;
 	odom.pose.pose.position.y = msg->transform.translation.y;
 	odom.pose.pose.position.z = msg->transform.translation.z;
