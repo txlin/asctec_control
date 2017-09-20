@@ -92,9 +92,15 @@ void MinAccel::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
   	By(0,0) = odom_.pose.pose.position.y;
     By(2,0) = odom_.twist.twist.linear.y;
       
-  	Bz(0,0) = odom_.pose.pose.position.z;
-    Bz(2,0) = odom_.twist.twist.linear.z;
-      
+		if(wp->hold_z) {
+			Bz(0,0) = odom_.pose.pose.position.z;
+		  Bz(2,0) = odom_.twist.twist.linear.z;
+		    
+		}else {
+			Bz(0,0) = Bz(1,0);
+		  Bz(2,0) = Bz(3,0);
+		}
+
   	Byaw(0,0) = tf::getYaw(odom_.pose.pose.orientation);
     Byaw(2,0) = odom_.twist.twist.angular.z;
 

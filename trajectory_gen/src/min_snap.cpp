@@ -70,10 +70,18 @@ void MinSnap::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
     By(4,0) = 0.0;
     By(6,0) = 0.0;
       
-  	Bz(0,0) = odom_.pose.pose.position.z;
-    Bz(2,0) = odom_.twist.twist.linear.z;
-    Bz(4,0) = 0.0;
-    Bz(6,0) = 0.0;
+		if (wp->hold_z) {
+			Bz(0,0) = odom_.pose.pose.position.z;
+		  Bz(2,0) = odom_.twist.twist.linear.z;
+		  Bz(4,0) = 0.0;
+		  Bz(6,0) = 0.0;
+
+		}else {
+			Bz(0,0) = Bz(1,0);
+		  Bz(2,0) = Bz(3,0);
+		  Bz(4,0) = Bz(5,0);
+		  Bz(6,0) = Bz(7,0);
+		}
 
   	Byaw(0,0) = tf::getYaw(odom_.pose.pose.orientation);
     Byaw(2,0) = odom_.twist.twist.angular.z;

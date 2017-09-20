@@ -10,4 +10,5 @@ float64 desV
 float64 desA
 bool reset
 bool lock_yaw
+bool hold_z
 bool cont
