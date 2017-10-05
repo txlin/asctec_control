@@ -169,14 +169,6 @@ void MinJerk::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
   Byaw(3,0) = wp->yaw[1];
   Byaw(5,0) = wp->yaw[2];
 
-	if (Byaw(1,0) - Byaw(0,0) > M_PI) {
-		Byaw(1,0) -= 2*M_PI;
-
-	}else if (Byaw(1,0) - Byaw(0,0) < -M_PI) {
-		Byaw(1,0) += 2*M_PI;
-
-	}
-
  /*	Set A matrix according to calculated time
  	*	-----------------
 	*	t^4  t^3  t^2 t 1
@@ -338,7 +330,7 @@ asctec_msgs::PositionCmd* MinJerk::getNextCommand(void) {
 		      cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(5-i,0)*pow(t,i-2);
 				}
       }
-			//cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
+			cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
       cmd_ = cmd;
     }
   }

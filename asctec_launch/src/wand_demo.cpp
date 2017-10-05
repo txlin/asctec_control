@@ -333,7 +333,7 @@ void sendTrajectory(float x, float y, float z)
 	float ty = odom_.twist.twist.linear.y/maxA;
 	cmd.time = sqrt(pow(tx,2)+pow(ty,2));
 	cmd.time += sqrt(pow(x-odom_.pose.pose.position.x,2) + pow(y-odom_.pose.pose.position.y,2) + pow((z-odom_.pose.pose.position.z),2)) / maxV;
-
+	cmd.lock_yaw = true;
 	wpt_pub.publish(cmd);
 	isDone = false;
 }
@@ -364,7 +364,7 @@ void sendBorderTrajectory()
 	cmd.time = sqrt(pow(tx,2)+pow(ty,2));
 	cmd.time += sqrt(pow(cmd.position.x-odom_.pose.pose.position.x,2)+pow(cmd.position.y-odom_.pose.pose.position.y,2))/maxV;
 	cmd.reset = true;
-
+	cmd.lock_yaw = true;
 	wpt_pub.publish(cmd);
 	isDone = false;
 }
@@ -373,6 +373,7 @@ void sendLandTrajectory()
 {
 	asctec_msgs::WaypointCmd cmd;
 	cmd.reset = true;
+	cmd.lock_yaw = true;
 	cmd.position.x = 0.0;
 	cmd.position.y = 0.0;
 	cmd.position.z = 1.0;

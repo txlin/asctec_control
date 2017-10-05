@@ -11,6 +11,7 @@ std::string ugv_name, ugv_frame, w_frame;
 
 void viconCallback(const geometry_msgs::TransformStamped::ConstPtr &msg)
 {
+	static int rollover = 0;
 	double dt = msg->header.stamp.toSec() - past.toSec();
 	past = msg->header.stamp;
 	odom.header.frame_id = w_frame;
@@ -24,6 +25,29 @@ void viconCallback(const geometry_msgs::TransformStamped::ConstPtr &msg)
 	odom.pose.pose.position.y = msg->transform.translation.y;
 	odom.pose.pose.position.z = msg->transform.translation.z;
 	odom.pose.pose.orientation = msg->transform.rotation;
+
+	tf::Pose pose;
+  tf::poseMsgToTF(odom.pose.pose, pose);
+  double yaw = tf::getYaw(pose.getRotation());
+	static double yaw0 = yaw;
+
+	if (yaw - yaw0 < -M_PI) {
+		rollover++;
+
+	}else if (yaw - yaw0 > M_PI) {
+		rollover--;
+	}
+	yaw += 2*M_PI*rollover;
+	yaw0 = yaw-2*M_PI*rollover;
+
+	tf::Quaternion q;
+	tf::quaternionMsgToTF(odom.pose.pose.orientation, q);
+	tf::Matrix3x3 m(q);
+
+	double r,p,dy;
+	m.getRPY(r,p,dy);
+	q.setRPY(r,p,yaw);
+	tf::quaternionTFToMsg(q, odom.pose.pose.orientation);
 
 	odom_pub.publish(odom);	
 }

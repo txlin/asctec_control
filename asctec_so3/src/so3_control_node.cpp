@@ -50,7 +50,7 @@ void publishSO3Command(void)
 		}
 		si_command.roll = roll;
 		si_command.pitch = -pitch;
-		si_command.yaw = yaw;
+		si_command.yaw = -yaw;
 	}
   si_cmd_pub.publish(si_command);
 }

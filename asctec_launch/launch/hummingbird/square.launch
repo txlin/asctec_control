@@ -1,7 +1,7 @@
 <launch>
 	<arg name="group_ns" value="asctec" />
 	<arg name="linear" value="true" />
-	<arg name="sim" value="true"/>
+	<arg name="sim" value="false"/>
 
 	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
 

@@ -19,28 +19,36 @@ void viconCallback(const geometry_msgs::TransformStamped::ConstPtr &msg)
 	odom.twist.twist.linear.y = (msg->transform.translation.y-odom.pose.pose.position.y)/dt;
 	odom.twist.twist.linear.z = (msg->transform.translation.z-odom.pose.pose.position.z)/dt;
 
-	nav_msgs::Odometry dummy;
-	dummy.pose.pose.orientation = msg->transform.rotation;
+	nav_msgs::Odometry new_odom;
+	new_odom.pose.pose.orientation = msg->transform.rotation;
 	tf::Pose pose;
-  tf::poseMsgToTF(dummy.pose.pose, pose);
+  tf::poseMsgToTF(new_odom.pose.pose, pose);
   double yaw = tf::getYaw(pose.getRotation());
-	tf::poseMsgToTF(odom.pose.pose, pose);
-  double yaw2 = tf::getYaw(pose.getRotation());
-	if (yaw - yaw2 > M_PI)	{
+	static double yaw0 = yaw;
+
+	if (yaw - yaw0 < -M_PI) {
 		rollover++;
-	}else if (yaw - yaw2 < -M_PI) {
+
+	}else if (yaw - yaw0 > M_PI) {
 		rollover--;
-	}else {
-		rollover = 0;
 	}
-	yaw2 += 2*M_PI*rollover;
-	odom.twist.twist.angular.z = (yaw-yaw2)/dt;
+	yaw += 2*M_PI*rollover;
+	odom.twist.twist.angular.z = (yaw-yaw0)/dt;
+	yaw0 = yaw-2*M_PI*rollover;
 
 	odom.pose.pose.position.x = msg->transform.translation.x;
 	odom.pose.pose.position.y = msg->transform.translation.y;
 	odom.pose.pose.position.z = msg->transform.translation.z;
 	odom.pose.pose.orientation = msg->transform.rotation;
+	
+	tf::Quaternion q;
+	tf::quaternionMsgToTF(odom.pose.pose.orientation, q);
+	tf::Matrix3x3 m(q);
 
+	double r,p,dy;
+	m.getRPY(r,p,dy);
+	q.setRPY(r,p,yaw);
+	tf::quaternionTFToMsg(q, odom.pose.pose.orientation);
 	odom_pub.publish(odom);	
 }
 
