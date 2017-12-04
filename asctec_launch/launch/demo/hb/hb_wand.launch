@@ -1,0 +1,27 @@
+<launch>
+	<arg name="group_ns" value="asctec" />
+	<arg name="asctec_model" value="hb" />
+	<arg name="linear" value="true" />
+	<arg name="sim" value="false"/>
+
+	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
+
+	<group ns="$(arg group_ns)">
+		<include file="$(find asctec_launch)/basic_launch/min_jerk_wand.launch">
+      <arg name="group_ns" value="$(arg group_ns)" /> 
+			<arg name="asctec_model" value="$(arg asctec_model)" />
+      <arg name="linear" value="$(arg linear)" />
+			<arg name="continuous" value="false" />
+      <arg name="sim" value="$(arg sim)" /> 
+    </include>
+
+		<node pkg="asctec_launch"
+			type="wand_node"
+			name="wand"
+			output="screen">
+			<param name="world" value="odom"/>
+			<param name="wand" value="vicon/hri_wand/hri_wand"/>
+		</node>
+
+	</group>
+</launch>

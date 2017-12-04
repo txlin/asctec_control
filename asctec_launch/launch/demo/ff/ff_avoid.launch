@@ -1,6 +1,8 @@
 <launch>
 	<arg name="group_ns" value="asctec" />
-	<arg name="linear" value="false" />
+	<arg name="asctec_model" value="ff" />
+	<arg name="linear" value="true" />
+	<arg name="frame" default="/vicon/firefly/firefly" />
 	<arg name="sim" value="false" />
 
 	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
@@ -9,27 +11,19 @@
 	<group ns="$(arg group_ns)">
 		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
       <arg name="group_ns" value="$(arg group_ns)" /> 
-			<arg name="viz" value="true"/>
-			<arg name="continuous" value="false" />
-			<arg name="linear" value="$(arg linear)" />
+			<arg name="asctec_model" value="$(arg asctec_model)" />
+			<arg name="frame" value="$(arg frame)" />
+      <arg name="linear" value="$(arg linear)" />
       <arg name="sim" value="$(arg sim)" /> 
+			<arg name="viz" value="false"/>
     </include>
 
 		<node pkg="asctec_launch"
-			type="track_node"
-			name="track"
+			type="avoid_node"
+			name="avoid"
 			output="screen">
 			<param name="world" value="odom"/>
-			<param name="ugv_odom" value="ugv/odom"/>
-		</node>
-
-		<node pkg="asctec_launch"
-			type="ugv_vicon_node"
-			name="ugv_vicon"
-			output="screen">
-			<param name="world" value="odom"/>
-			<param name="ugv_name" value="ugv"/>
-			<param name="ugv_frame" value="/vicon/jackal1/jackal1"/>
+			<param name="obs_frame" value="vicon/tiki/tiki"/>
 		</node>
 
 	</group>

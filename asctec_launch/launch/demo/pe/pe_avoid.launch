@@ -1,0 +1,30 @@
+<launch>
+	<arg name="group_ns" value="asctec" />
+	<arg name="linear" value="true" />
+	<arg name="asctec_model" value="pe" />
+	<arg name="frame" default="/vicon/pelican_gr/pelican_gr" />
+	<arg name="sim" value="false"/>
+
+	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
+	<node pkg="joy" type="joy_node" name="joystick"/>
+
+	<group ns="$(arg group_ns)">
+		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
+      <arg name="group_ns" value="$(arg group_ns)" /> 
+			<arg name="asctec_model" value="$(arg asctec_model)" />
+      <arg name="linear" value="$(arg linear)" />
+			<arg name="frame" value="$(arg frame)" />
+      <arg name="sim" value="$(arg sim)" /> 
+			<arg name="viz" value="false"/>
+    </include>
+
+		<node pkg="asctec_launch"
+			type="avoid_node"
+			name="avoid"
+			output="screen">
+			<param name="world" value="odom"/>
+			<param name="obs_frame" value="vicon/tiki/tiki"/>
+		</node>
+
+	</group>
+</launch>

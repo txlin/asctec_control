@@ -4,6 +4,7 @@
 	<arg name="group_snap" value="asctec_snap" />
 	<arg name="linear" value="true" />
 	<arg name="sim" value="true"/>
+	<arg name="asctec_model" value="hb" />
 
 	<group ns="$(arg group_acc)">
 		<include file="$(find asctec_launch)/basic_launch/min_acc.launch">

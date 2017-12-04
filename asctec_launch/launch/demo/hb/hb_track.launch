@@ -1,0 +1,38 @@
+<launch>
+	<arg name="group_ns" value="asctec" />
+	<arg name="asctec_model" value="hb" />
+	<arg name="linear" value="false" />
+	<arg name="sim" value="false" />
+
+	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
+	<node pkg="joy" type="joy_node" name="joystick"/>
+
+	<group ns="$(arg group_ns)">
+		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
+      <arg name="group_ns" value="$(arg group_ns)" /> 
+			<arg name="asctec_model" value="$(arg asctec_model)" />
+			<arg name="viz" value="true"/>
+			<arg name="continuous" value="false" />
+			<arg name="linear" value="$(arg linear)" />
+      <arg name="sim" value="$(arg sim)" /> 
+    </include>
+
+		<node pkg="asctec_launch"
+			type="track_node"
+			name="track"
+			output="screen">
+			<param name="world" value="odom"/>
+			<param name="ugv_odom" value="ugv/odom"/>
+		</node>
+
+		<node pkg="asctec_launch"
+			type="ugv_vicon_node"
+			name="ugv_vicon"
+			output="screen">
+			<param name="world" value="odom"/>
+			<param name="ugv_name" value="ugv"/>
+			<param name="ugv_frame" value="/vicon/jackal1/jackal1"/>
+		</node>
+
+	</group>
+</launch>

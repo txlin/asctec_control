@@ -1,0 +1,14 @@
+<launch>
+		<node pkg="asctec_lin"
+		  type="asctec_lin_node"
+		  name="asctec_lin_control"
+		  required="true"
+		  output="screen">
+		  <param name="mass" value="0.55"/>
+		  <rosparam param="gains/pos">[1, 1, 4]</rosparam>			<!-- 1 1 4 -->
+		  <rosparam param="gains/vel">[0.75, 0.75, 3.95]</rosparam>   <!-- 0.75 0.75 3.95 -->
+		  <rosparam param="gains/int">[0.0001, 0.0001, 0.0001]</rosparam> <!-- 0.005 -->
+			<rosparam param="gains/kiyaw">0.005</rosparam>
+			<rosparam param="gains/kyaw">1.3</rosparam> <!--1.4-->
+		</node>
+</launch>
