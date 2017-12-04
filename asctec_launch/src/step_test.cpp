@@ -35,13 +35,11 @@ void statusCallback(const std_msgs::Bool::ConstPtr& msg)
 	if(!msg->data && first) {
 		first = false;
 		waypoint.position.y = 1.0;
-		//waypoint.desV = maxV;
-		//waypoint.desA = maxA;
 	}
   if(msg->data && !timing && !first) {
 		waypoint.header.stamp = ros::Time::now();
 		waypoint.position.y = -waypoint.position.y;
-		waypoint.time = 2.5;
+		waypoint.time = 5;
 		waypoints.publish(waypoint);
 		last_waypoint = waypoint;
 	}
@@ -67,8 +65,7 @@ int main(int argc, char** argv) {
 	ros::Duration(2.0).sleep();
 	waypoint.header.stamp = ros::Time::now();
 	waypoint.position.z = 1.0;
-	waypoint.desV = 0.5;
-	waypoint.desA = 0.5;
+	waypoint.time = 5.0;
 	waypoints.publish(waypoint);
 	last_waypoint = waypoint;
 	ros::spin();
