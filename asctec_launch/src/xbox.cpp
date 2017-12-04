@@ -22,10 +22,8 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 	if (msg->buttons[RB]) {
 		// change position cmd in z-yaw
 		cmd.position.z = odom.pose.pose.position.z + 0.5*msg->axes[LSV];
-		tf::Quaternion q(odom.pose.pose.orientation.x, 
-										 odom.pose.pose.orientation.y,
-										 odom.pose.pose.orientation.z, 
-										 odom.pose.pose.orientation.w);
+		tf::Quaternion q(odom.pose.pose.orientation.x, odom.pose.pose.orientation.y,
+				 odom.pose.pose.orientation.z, odom.pose.pose.orientation.w);
 
 		double d1, d2, yaw;
 		tf::Matrix3x3(q).getRPY(d1, d2, yaw);
@@ -54,9 +52,9 @@ int main(int argc, char** argv) {
 	ros::NodeHandle nh;
   
 	/* -------------------- Publishers, and Subscribers -------------------- */
-  cmd_pub = nh.advertise<asctec_msgs::PositionCmd>(ros::this_node::getNamespace()+"/position_cmd", 10);
-  ros::Subscriber joy_sub = nh.subscribe(ros::this_node::getNamespace()+"/joy", 1, joyCallback);
-  ros::Subscriber odom_sub = nh.subscribe(ros::this_node::getNamespace()+"/odom", 1, odomCallback);
+	cmd_pub = nh.advertise<asctec_msgs::PositionCmd>(ros::this_node::getNamespace()+"/position_cmd", 10);
+	ros::Subscriber joy_sub = nh.subscribe(ros::this_node::getNamespace()+"/joy", 1, joyCallback);
+	ros::Subscriber odom_sub = nh.subscribe(ros::this_node::getNamespace()+"/odom", 1, odomCallback);
 
 	ros::spin();
 	return 0;
