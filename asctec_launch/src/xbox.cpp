@@ -20,8 +20,14 @@ nav_msgs::Odometry odom;
 void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 {
 	if (msg->buttons[RB]) {
-		// change position cmd in z-yaw
+		// change position cmd in z
 		cmd.position.z = odom.pose.pose.position.z + 0.5*msg->axes[LSV];
+	}
+
+	if (msg->buttons[LB]) {
+		// change position cmd in x-y-yaw
+		cmd.position.x = odom.pose.pose.position.x + 0.5*msg->axes[RSV];
+		cmd.position.y = odom.pose.pose.position.y + 0.5*msg->axes[RSH];
 		tf::Quaternion q(odom.pose.pose.orientation.x, odom.pose.pose.orientation.y,
 				 odom.pose.pose.orientation.z, odom.pose.pose.orientation.w);
 
@@ -29,16 +35,10 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 		tf::Matrix3x3(q).getRPY(d1, d2, yaw);
 		cmd.yaw[0] = yaw + 0.3*msg->axes[LSH];
 	}
-
-	if (msg->buttons[LB]) {
-		// change position cmd in x-y
-		cmd.position.x = odom.pose.pose.position.x + 0.5*msg->axes[RSV];
-		cmd.position.y = odom.pose.pose.position.y + 0.5*msg->axes[RSH];
-	}
 	
 	if (msg->buttons[LB] || msg->buttons[RB]) {
 		cmd_pub.publish(cmd);
-		ROS_INFO("Updated: %f, %f, %f, %f", cmd.position.x, cmd.position.y, cmd.position.z, cmd.yaw[0]);
+		ROS_INFO("Updated: %.02f, %.02f, %.02f, %.02f", cmd.position.x, cmd.position.y, cmd.position.z, cmd.yaw[0]);
 	}
 }
 
