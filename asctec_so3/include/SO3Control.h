@@ -12,7 +12,8 @@ class SO3Control
   void setGravity(const double g);
   void setPosition(const Eigen::Vector3d &position);
   void setVelocity(const Eigen::Vector3d &velocity);
-
+	void setYaw(const double &yaw);
+	void setYawDot(const double &yaw_dot);
   void calculateControl(const Eigen::Vector3d &des_pos,
                         const Eigen::Vector3d &des_vel,
                         const Eigen::Vector3d &des_acc,
@@ -24,6 +25,10 @@ class SO3Control
   const Eigen::Vector3d &getComputedForce(void);
   const Eigen::Quaterniond &getComputedOrientation(void);
   const Eigen::Vector3d &getDesiredAngularVelocity(void);
+	const double &getComputedYaw(const double kyaw, 
+															 const double kdyaw,
+															 const double des_yaw,
+															 const double des_yaw_dot);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
@@ -33,7 +38,8 @@ class SO3Control
   double g_;
   Eigen::Vector3d pos_;
   Eigen::Vector3d vel_;
-
+	double yaw_;
+	double yaw_dot_;
   // Outputs of the controller
   Eigen::Vector3d force_;
   Eigen::Quaterniond orientation_;

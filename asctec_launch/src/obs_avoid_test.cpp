@@ -26,9 +26,9 @@
 #define quad_r 0.27     //21 inches diameter
 
 #define freq 10
-#define maxV 0.7
+#define maxV 0.9
 #define maxVZ 0.2
-#define maxA 0.6
+#define maxA 0.8
 
 using namespace std;
 
@@ -591,14 +591,14 @@ int main(int argc, char** argv) {
 	joy_sub = nh.subscribe("/joy", 10, joyCallback);
 	odom_sub = nh.subscribe(ros::this_node::getNamespace()+"/odom", 10, odomCallback);
 	
-	listener.waitForTransform(world, obs_frame, ros::Time(0), ros::Duration(3.0));	
+	//listener.waitForTransform(world, obs_frame, ros::Time(0), ros::Duration(3.0));	
 
 	ROS_INFO("Running: Obstacle Avoider");
 
 	while(ros::ok()) {
 
 		ros::spinOnce();
-		listener.lookupTransform(world, obs_frame, ros::Time(0), transform);
+		//listener.lookupTransform(world, obs_frame, ros::Time(0), transform);
 		showRange(transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z());
 		showRealRadius(transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z());
 
@@ -609,22 +609,22 @@ int main(int argc, char** argv) {
 		switch(state) {
 			case waitStart:
 				if(isFlying) {
-					if(targetPointOpen(0,0,&transform)) {
+					//if(targetPointOpen(0,0,&transform)) {
 						ROS_INFO("Taking off!");
 						state = waitHover;
 						sendRiseTrajectory();
 
-					}else {
+					/*}else {
 						ROS_INFO("Remove obstacle from center first!");
 						isFlying = false;
-					}
+					}*/
 				}
 				break;
 
 			case waitHover:
 				if(isDone) {
 					if(nextTraj) {
-						if(targetPointOpen(0,-2.0,&transform)) {
+						//if(targetPointOpen(0,-2.0,&transform)) {
 							ROS_INFO("Moving to point A");
 							state = waitA;
 							asctec_msgs::WaypointCmd cmd;
@@ -633,9 +633,9 @@ int main(int argc, char** argv) {
 							cmd.position.z = 1;
 							cmd.time = 5;
 							traj_pub.publish(cmd);
-						}else {
+						/*}else {
 							ROS_INFO("Remove obstacle from A first!");
-						}
+						}*/
 						nextTraj = false;
 					}
 
@@ -664,16 +664,16 @@ int main(int argc, char** argv) {
 					}
 
 					if(!isFlying) {
-						if(targetPointOpen(0,0,&transform)) {
+						//if(targetPointOpen(0,0,&transform)) {
 							ROS_INFO("Landing!");
 							nextTraj = false;
 							state = waitStart;
 
 							sendLandTrajectory();
-						}else {
+						/*}else {
 							ROS_INFO("Not safe to land! Remove object from center first!");
 							isFlying = true;
-						}
+						}*/
 					}
 				}
 				break;
@@ -694,16 +694,16 @@ int main(int argc, char** argv) {
 					}
 
 					if(!isFlying) {
-						if(targetPointOpen(0,0,&transform)) {
+						//if(targetPointOpen(0,0,&transform)) {
 							ROS_INFO("Landing!");
 							nextTraj = false;
 							state = waitStart;
 
 							sendLandTrajectory();
-						}else {
+						/*}else {
 							ROS_INFO("Not safe to land! Remove object from center first!");
 							isFlying = true;
-						}
+						}*/
 					}
 				}
 				break;

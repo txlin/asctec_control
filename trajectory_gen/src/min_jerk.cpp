@@ -37,9 +37,9 @@ MinJerk::MinJerk()
 	path_.action = visualization_msgs::Marker::ADD;
 	path_.ns = "path_jerk";
 	path_.id = 0;
-	path_.scale.x = 0.0125;
-	path_.scale.y = 0.0125;
-	path_.scale.z = 0.0125;
+	path_.scale.x = 0.01;
+	path_.scale.y = 0.01;
+	path_.scale.z = 0.01;
 	path_.color.a = 0.65;
 	path_.color.r = 1.0;
 	path_.color.b = 0.3;
@@ -330,7 +330,12 @@ asctec_msgs::PositionCmd* MinJerk::getNextCommand(void) {
 		      cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(5-i,0)*pow(t,i-2);
 				}
       }
-			cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
+			if (isnan(cmd.velocity.x)) cmd.velocity.x = cmd_.velocity.x;
+			if (isnan(cmd.velocity.y)) cmd.velocity.y = cmd_.velocity.y;
+			if (isnan(cmd.velocity.z)) cmd.velocity.z = cmd_.velocity.z;
+			if (isnan(cmd.accel.x)) cmd.accel.x = cmd_.accel.x;
+			if (isnan(cmd.accel.y)) cmd.accel.y = cmd_.accel.y;
+			if (isnan(cmd.accel.z)) cmd.accel.z = cmd_.accel.z;
       cmd_ = cmd;
     }
   }

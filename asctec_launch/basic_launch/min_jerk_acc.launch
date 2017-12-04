@@ -1,5 +1,6 @@
 <launch>
 	<arg name="group_ns" default="asctec" />
+	<arg name="asctec_model" default="hb" />
   <arg name="port" default="/dev/ttyUSB0" />
   <arg name="frame" default="/vicon/hummingbird_1/hummingbird_1" />
   <arg name="world" default="/odom" />
@@ -10,8 +11,8 @@
 	<arg name="continuous" default="true"/>
 	<arg name="sim" default="false"/>
 
-	<include file="$(find asctec_launch)/basic_launch/hummingbird/nonlinear.launch" unless="$(arg linear)"/>
-	<include file="$(find asctec_launch)/basic_launch/hummingbird/linear.launch" if="$(arg linear)"/>
+	<include file="$(find asctec_launch)/basic_launch/$(arg asctec_model)_nonlinear.launch" unless="$(arg linear)"/>
+	<include file="$(find asctec_launch)/basic_launch/$(arg asctec_model)_linear.launch" if="$(arg linear)"/>
 
 	<node name="rviz" pkg="rviz" type="rviz" if="$(arg viz)" args="-d $(find asctec_viz)/rviz/$(arg rviz)" />
 
@@ -22,8 +23,8 @@
 	</node>
 
 	<node pkg="trajectory_gen"
-	  type="min_accel_node"
-	  name="min_accel"
+	  type="min_jerk_node"
+	  name="min_jerk"
 	  required="true"
 	  output="screen">
 	  <param name="rate" value="15"/>
@@ -37,6 +38,7 @@
 	   <param name="rc_data_rate" value="0"/>
 	   <param name="ctrl_out_rate" value="10"/>
 	   <param name="gps_data_advanced_rate" value="0"/>
+		 <remap from="cmd_si" to="angles" />
 	</node>
 
 	<node pkg="asctec_launch"

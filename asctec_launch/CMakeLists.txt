@@ -148,7 +148,9 @@ add_executable(square_node src/square.cpp)
 add_executable(spiral_node src/spiral.cpp)
 add_executable(circle_node src/circle.cpp)
 add_executable(avoid_node src/obs_avoid.cpp)
+add_executable(test_avoid_node src/obs_avoid_test.cpp)
 add_executable(aggressive_node src/aggressive.cpp)
+add_executable(learn2fly_node src/fly.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -170,6 +172,7 @@ add_dependencies(square_node so3_control_generate_messages_cpp)
 add_dependencies(spiral_node so3_control_generate_messages_cpp)
 add_dependencies(circle_node so3_control_generate_messages_cpp)
 add_dependencies(avoid_node so3_control_generate_messages_cpp)
+add_dependencies(test_avoid_node so3_control_generate_messages_cpp)
 add_dependencies(aggressive_node so3_control_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
@@ -209,7 +212,13 @@ target_link_libraries(circle_node
 target_link_libraries(avoid_node
   ${catkin_LIBRARIES}
 )
+target_link_libraries(test_avoid_node
+  ${catkin_LIBRARIES}
+)
 target_link_libraries(aggressive_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(learn2fly_node
   ${catkin_LIBRARIES}
 )
 #############

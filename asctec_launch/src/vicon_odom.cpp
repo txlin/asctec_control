@@ -4,7 +4,6 @@
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
 
-int rollover = 0;
 ros::Time past;
 ros::Publisher odom_pub;
 nav_msgs::Odometry odom;
@@ -25,30 +24,19 @@ void viconCallback(const geometry_msgs::TransformStamped::ConstPtr &msg)
   tf::poseMsgToTF(new_odom.pose.pose, pose);
   double yaw = tf::getYaw(pose.getRotation());
 	static double yaw0 = yaw;
-
-	if (yaw - yaw0 < -M_PI) {
-		rollover++;
-
-	}else if (yaw - yaw0 > M_PI) {
-		rollover--;
+	while (yaw-yaw0 > M_PI) {
+		yaw0 += 2*M_PI;
 	}
-	yaw += 2*M_PI*rollover;
+	while (yaw-yaw0 < -M_PI) {
+		yaw0 -= 2*M_PI;
+	}
 	odom.twist.twist.angular.z = (yaw-yaw0)/dt;
-	yaw0 = yaw-2*M_PI*rollover;
+	yaw0 = yaw;
 
 	odom.pose.pose.position.x = msg->transform.translation.x;
 	odom.pose.pose.position.y = msg->transform.translation.y;
 	odom.pose.pose.position.z = msg->transform.translation.z;
 	odom.pose.pose.orientation = msg->transform.rotation;
-	
-	tf::Quaternion q;
-	tf::quaternionMsgToTF(odom.pose.pose.orientation, q);
-	tf::Matrix3x3 m(q);
-
-	double r,p,dy;
-	m.getRPY(r,p,dy);
-	q.setRPY(r,p,yaw);
-	tf::quaternionTFToMsg(q, odom.pose.pose.orientation);
 	odom_pub.publish(odom);	
 }
 

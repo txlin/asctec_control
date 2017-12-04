@@ -137,14 +137,6 @@ void MinAccel::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
   Byaw(1,0) = wp->yaw[0];
   Byaw(3,0) = wp->yaw[1];
 
-	if (Byaw(1,0) - Byaw(0,0) > M_PI) {
-		Byaw(1,0) -= 2*M_PI;
-
-	}else if (Byaw(1,0) - Byaw(0,0) < -M_PI) {
-		Byaw(1,0) += 2*M_PI;
-
-	}
-
  /*	Set A matrix according to calculated time
  	*	-----------
 	*	t^3 t^2 t 1
@@ -305,8 +297,12 @@ asctec_msgs::PositionCmd* MinAccel::getNextCommand(void) {
 		      cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(3-i,0)*pow(t,i-2);
 				}
       }
-
-			//cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
+			if (isnan(cmd.velocity.x)) cmd.velocity.x = cmd_.velocity.x;
+			if (isnan(cmd.velocity.y)) cmd.velocity.y = cmd_.velocity.y;
+			if (isnan(cmd.velocity.z)) cmd.velocity.z = cmd_.velocity.z;
+			if (isnan(cmd.accel.x)) cmd.accel.x = cmd_.accel.x;
+			if (isnan(cmd.accel.y)) cmd.accel.y = cmd_.accel.y;
+			if (isnan(cmd.accel.z)) cmd.accel.z = cmd_.accel.z;
       cmd_ = cmd;
     }
   }

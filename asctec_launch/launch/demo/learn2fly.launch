@@ -1,0 +1,14 @@
+<launch>
+
+	<node pkg="joy" type="joy_node" name="joy_control" output="screen"/>
+	<node pkg="asctec_launch" type="learn2fly_node" name="flyer" output="screen"/>
+	<node pkg="asctec_ll_updated" name="asctec_ll" type="asctec_ll_updated_node" output="screen">
+	   <param name="port" value="/dev/ttyUSB0"/>
+	   <param name="ll_status_rate" value="0"/>
+	   <param name="imu_calc_data_rate" value="0"/>
+	   <param name="rc_data_rate" value="0"/>
+	   <param name="ctrl_out_rate" value="10"/>
+	   <param name="gps_data_advanced_rate" value="0"/>
+	</node>
+
+</launch>

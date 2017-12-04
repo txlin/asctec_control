@@ -70,7 +70,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom)
 		des_pos_ = position;
 		des_vel_ = Eigen::Vector3d(0, 0, 0);
 		des_acc_ = Eigen::Vector3d(0, 0, 0);
-		des_yaw_ = current_yaw_;
+		des_yaw_ = 0.0;
 
 		position_cmd_init_ = true;
 	}

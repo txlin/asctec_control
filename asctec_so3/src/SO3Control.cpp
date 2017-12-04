@@ -27,6 +27,16 @@ void SO3Control::setVelocity(const Eigen::Vector3d &velocity)
   vel_ = velocity;
 }
 
+void SO3Control::setYaw(const double &yaw)
+{
+  yaw_ = yaw;
+}
+
+void SO3Control::setYawDot(const double &yaw_dot)
+{
+  yaw_dot_ = yaw_dot;
+}
+
 void SO3Control::calculateControl(const Eigen::Vector3d &des_pos,
                                   const Eigen::Vector3d &des_vel,
                                   const Eigen::Vector3d &des_acc,
@@ -60,6 +70,21 @@ void SO3Control::calculateControl(const Eigen::Vector3d &des_pos,
 const Eigen::Vector3d &SO3Control::getComputedForce(void)
 {
   return force_;
+}
+
+const double &SO3Control::getComputedYaw(const double kyaw, 
+																				 const double kdyaw,
+																				 const double des_yaw,
+																				 const double des_yaw_dot)
+{
+  double e = des_yaw-yaw_;
+	while (e > M_PI) {
+		e -= 2*M_PI;
+	}
+	while (e < -M_PI) {
+		e += 2*M_PI;
+	}
+	return kyaw*e + kdyaw*(des_yaw_dot-yaw_dot_);
 }
 
 const Eigen::Quaterniond &SO3Control::getComputedOrientation(void)

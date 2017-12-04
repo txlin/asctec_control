@@ -115,30 +115,21 @@ void MinSnap::addWaypoint(const asctec_msgs::WaypointCmd::ConstPtr& wp)
   Bx(1,0) = wp->position.x;
   Bx(3,0) = wp->velocity.x;
   Bx(5,0) = wp->accel.x;
-  Bx(7,0) = wp->jerk.x;
+  Bx(7,0) = 0.0;
     
   By(1,0) = wp->position.y;
   By(3,0) = wp->velocity.y;
   By(5,0) = wp->accel.y;
-  By(7,0) = wp->jerk.y;
+  By(7,0) = 0.0;
     
   Bz(1,0) = wp->position.z;
   Bz(3,0) = wp->velocity.z;
   Bz(5,0) = wp->accel.z;
-  Bz(7,0) = wp->jerk.z;
+  Bz(7,0) = 0.0;
     
   Byaw(1,0) = wp->yaw[0];
   Byaw(3,0) = wp->yaw[1];
   Byaw(5,0) = wp->yaw[2];
-
-	if (Byaw(1,0) - Byaw(0,0) > M_PI) {
-		Byaw(1,0) -= 2*M_PI;
-
-	}else if (Byaw(1,0) - Byaw(0,0) < -M_PI) {
-		Byaw(1,0) += 2*M_PI;
-
-	}
-
 
 	for(int i=7; i>=0; i--) {
 		A(1,7-i) = pow(time,i);
@@ -263,8 +254,13 @@ asctec_msgs::PositionCmd* MinSnap::getNextCommand(void) {
 		      cmd.yaw[1] += i*Xyaw.front()->operator()(7-i,0)*pow(t,i-1);
 		      cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(7-i,0)*pow(t,i-2);
 				}
+			if (isnan(cmd.velocity.x)) cmd.velocity.x = cmd_.velocity.x;
+			if (isnan(cmd.velocity.y)) cmd.velocity.y = cmd_.velocity.y;
+			if (isnan(cmd.velocity.z)) cmd.velocity.z = cmd_.velocity.z;
+			if (isnan(cmd.accel.x)) cmd.accel.x = cmd_.accel.x;
+			if (isnan(cmd.accel.y)) cmd.accel.y = cmd_.accel.y;
+			if (isnan(cmd.accel.z)) cmd.accel.z = cmd_.accel.z;
       }
-			//cmd.yaw[0] = cmd.yaw[1] = cmd.yaw[2] = 0.0;
       cmd_ = cmd;
     }
   }

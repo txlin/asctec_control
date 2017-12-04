@@ -10,9 +10,13 @@ void landCallback(const std_msgs::Bool::ConstPtr& msg)
 	if(msg->data) {
 		asctec_msgs::WaypointCmd waypoint;
 		waypoint.header.stamp = ros::Time::now();
+		waypoint.position.z = 1.0;
+		waypoint.time = 5.0;
+		waypoints.publish(waypoint);
+
+		waypoint.header.stamp = ros::Time::now();
 		waypoint.position.z = 0.0;
-		waypoint.desV = 0.5;
-		waypoint.desA = 0.2;
+		waypoint.time = 5.0;
 		waypoints.publish(waypoint);
 	}
 }
@@ -24,13 +28,14 @@ int main(int argc, char** argv) {
 	/* -------------------- Publishers, and Subscribers -------------------- */
   waypoints = nh.advertise<asctec_msgs::WaypointCmd>(ros::this_node::getNamespace()+"/waypoints", 10); 			// Position goals to linear and nonlinear controllers
   ros::Subscriber status = nh.subscribe(ros::this_node::getNamespace()+"/land", 1, landCallback);						// Trajectory completion status
-	ros::Duration(5.0).sleep();
+	ros::Duration(2.0).sleep();
 
 	asctec_msgs::WaypointCmd waypoint;
 	waypoint.header.stamp = ros::Time::now();
+	waypoint.position.x = 0.0;
+	waypoint.position.y = 0.0;
 	waypoint.position.z = 1.0;
-	waypoint.desV = 0.5;
-	waypoint.desA = 0.2;
+	waypoint.time = 5.0;
 	waypoints.publish(waypoint);
 
 	ros::spin();
