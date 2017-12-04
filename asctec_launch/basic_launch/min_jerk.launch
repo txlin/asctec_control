@@ -1,9 +1,9 @@
 <launch>
 	<arg name="group_ns" default="asctec" />
 	<arg name="asctec_model" default="hb" />
-  <arg name="port" default="/dev/ttyUSB0" />
-  <arg name="frame" default="/vicon/hummingbird_1/hummingbird_1" />
-  <arg name="world" default="/odom" />
+	<arg name="port" default="/dev/ttyUSB0" />
+	<arg name="frame" default="/vicon/hummingbird_1/hummingbird_1" />
+	<arg name="world" default="/odom" />
 	<arg name="rviz" default="basic.rviz"/>
 	<arg name="viz" default="true"/>
 	<arg name="mesh" default="package://mesh_visualization/meshes/hummingbird.mesh"/>
@@ -28,7 +28,7 @@
 	  required="true"
 	  output="screen">
 	  <param name="rate" value="15"/>
-		<param name="continuous" value="$(arg continuous)"/>
+	  <param name="continuous" value="$(arg continuous)"/>
 	</node>
 
 	<node pkg="asctec_ll_updated" name="asctec_ll" type="asctec_ll_updated_node" output="screen" unless="$(arg sim)">
