@@ -39,7 +39,7 @@ void statusCallback(const std_msgs::Bool::ConstPtr& msg)
   if(msg->data && !timing && !first) {
 		waypoint.header.stamp = ros::Time::now();
 		waypoint.position.y = -waypoint.position.y;
-		waypoint.time = 5;
+		waypoint.time = 5.0;
 		waypoints.publish(waypoint);
 		last_waypoint = waypoint;
 	}

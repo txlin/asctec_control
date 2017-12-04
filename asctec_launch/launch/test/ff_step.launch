@@ -1,7 +1,7 @@
 <launch>
 	<arg name="group_ns" value="asctec" />
 	<arg name="asctec_model" value="ff" />
-	<arg name="linear" value="false" />
+	<arg name="linear" value="true" />
 	<arg name="frame" default="/vicon/firefly/firefly" />
 	<arg name="port" value="/dev/ttyS3"/>
 	<arg name="sim" value="false"/>
