@@ -2,6 +2,7 @@
 	<arg name="group_ns" value="asctec" />
 	<arg name="asctec_model" value="ff" />
 	<arg name="linear" value="true" />
+	<arg name="port" value="/dev/ttyS3"/>
 	<arg name="frame" default="/vicon/firefly/firefly" />
 	<arg name="sim" value="false" />
 
@@ -10,14 +11,15 @@
 
 	<group ns="$(arg group_ns)">
 		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
-      <arg name="group_ns" value="$(arg group_ns)" /> 
+			<arg name="group_ns" value="$(arg group_ns)" /> 
 			<arg name="asctec_model" value="$(arg asctec_model)" />
 			<arg name="continuous" value="false" />
 			<arg name="viz" value="false"/>
 			<arg name="frame" value="$(arg frame)" />
 			<arg name="linear" value="$(arg linear)" />
-      <arg name="sim" value="$(arg sim)" /> 
-    </include>
+			<arg name="port" value="$(arg port)" />
+			<arg name="sim" value="$(arg sim)" /> 
+			</include>
 
 		<node pkg="asctec_launch"
 			type="track_node"
@@ -35,6 +37,6 @@
 			<param name="ugv_name" value="ugv"/>
 			<param name="ugv_frame" value="/vicon/jackal1/jackal1"/>
 		</node>
-
 	</group>
+
 </launch>

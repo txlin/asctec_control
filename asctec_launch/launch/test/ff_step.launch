@@ -3,6 +3,7 @@
 	<arg name="asctec_model" value="ff" />
 	<arg name="linear" value="false" />
 	<arg name="frame" default="/vicon/firefly/firefly" />
+	<arg name="port" value="/dev/ttyS3"/>
 	<arg name="sim" value="false"/>
 
 	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
@@ -10,12 +11,13 @@
 	<group ns="$(arg group_ns)">
 		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
 			<arg name="viz" value="false" />
-      <arg name="group_ns" value="$(arg group_ns)" /> 
+			<arg name="group_ns" value="$(arg group_ns)" /> 
 			<arg name="asctec_model" value="$(arg asctec_model)" />
 			<arg name="frame" value="$(arg frame)" />
-      <arg name="linear" value="$(arg linear)" />
-      <arg name="sim" value="$(arg sim)" /> 
-    </include>
+			<arg name="port" value="$(arg port)" />
+			<arg name="linear" value="$(arg linear)" />
+			<arg name="sim" value="$(arg sim)" /> 
+		</include>
 
 		<node pkg="asctec_launch"
 			type="step_node"

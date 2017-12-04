@@ -26,8 +26,8 @@ int main(int argc, char** argv) {
 	ros::NodeHandle nh;
   
 	/* -------------------- Publishers, and Subscribers -------------------- */
-  waypoints = nh.advertise<asctec_msgs::WaypointCmd>(ros::this_node::getNamespace()+"/waypoints", 10); 			// Position goals to linear and nonlinear controllers
-  ros::Subscriber status = nh.subscribe(ros::this_node::getNamespace()+"/land", 1, landCallback);						// Trajectory completion status
+	waypoints = nh.advertise<asctec_msgs::WaypointCmd>(ros::this_node::getNamespace()+"/waypoints", 10); 			// Position goals to linear and nonlinear controllers
+	ros::Subscriber status = nh.subscribe(ros::this_node::getNamespace()+"/land", 1, landCallback);						// Trajectory completion status
 	ros::Duration(2.0).sleep();
 
 	asctec_msgs::WaypointCmd waypoint;

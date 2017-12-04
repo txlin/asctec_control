@@ -4,18 +4,19 @@
 	<arg name="linear" value="true" />
 	<arg name="frame" default="/vicon/firefly/firefly" />
 	<arg name="sim" value="false"/>
-
+	<arg name="port" value="/dev/ttyS3"/>
 	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
 
 	<group ns="$(arg group_ns)">
 		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
-			<arg name="viz" value="true" />
+			<arg name="viz" value="false" />
 			<arg name="asctec_model" value="$(arg asctec_model)" />
-      <arg name="group_ns" value="$(arg group_ns)" /> 
+			<arg name="group_ns" value="$(arg group_ns)" /> 
 			<arg name="frame" value="$(arg frame)" />
-      <arg name="linear" value="$(arg linear)" /> 
-      <arg name="sim" value="$(arg sim)" /> 
-    </include>
+			<arg name="linear" value="$(arg linear)" />
+			<arg name="port" value="$(arg port)" /> 
+			<arg name="sim" value="$(arg sim)" /> 
+		</include>
 
 		<node pkg="asctec_launch"
 			type="hover_node"
