@@ -8,7 +8,6 @@
 #include "SO3Control.cpp"
 #include <tf/transform_datatypes.h>
 
-#define MAX_THRUST 13.184
 #define MIN_THRUST 0.0
 
 SO3Control controller;
@@ -19,6 +18,7 @@ bool position_cmd_updated = false, position_cmd_init = false;
 Eigen::Vector3d des_pos, des_vel, des_acc, kx, kv;
 double des_yaw = 0, des_yaw_dot = 0, ky = 5.0, ky_dot = 2.0;
 double current_yaw = 0;
+double max_thrust;
 bool enable_motors = false;
 
 void publishSO3Command(void)
@@ -41,12 +41,12 @@ void publishSO3Command(void)
 		si_command.cmd[2] = true;
 		si_command.cmd[3] = true; 
 		si_command.thrust = force.norm();
-		if(si_command.thrust > MAX_THRUST) {
+		if(si_command.thrust > max_thrust) {
 		  si_command.thrust = 1.0;
 		}else if(si_command.thrust < MIN_THRUST) {
 		  si_command.thrust = 0.0;
 		} else{
-		  si_command.thrust = si_command.thrust/MAX_THRUST;
+		  si_command.thrust = si_command.thrust/max_thrust;
 		}
 		si_command.roll = roll;
 		si_command.pitch = -pitch;
@@ -121,6 +121,7 @@ int main(int argc, char **argv)
 
   double mass;
   n.param("mass", mass, 0.55);
+	n.param("thrust", max_thrust, 13.184);
   controller.setMass(mass);
 
   std::vector<double> kx_list, kv_list;

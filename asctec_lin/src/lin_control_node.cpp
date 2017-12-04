@@ -10,7 +10,6 @@
 #include <math.h>
 
 #define MAX_ANGLE M_PI/16
-#define MAX_THRUST 13.184d
 #define MIN_THRUST 0.0d
 
 PIDControl controller_;
@@ -19,6 +18,7 @@ ros::Publisher trpy_command_pub_;
 ros::Subscriber odom_sub_;
 ros::Subscriber position_cmd_sub_;
 
+double max_thrust;
 bool position_cmd_updated_ = false, position_cmd_init_ = false;
 Eigen::Vector3d des_pos_, des_vel_, des_acc_, kx_, kv_, ki_;
 double des_yaw_ = 0.0, ki_yaw_ = 5.0, k_yaw_ = 1.0, current_yaw_ = 0;
@@ -28,7 +28,7 @@ void publishTRPYCommand(void)
   controller_.calculateControl(des_pos_, des_vel_, des_acc_, des_yaw_, kx_, kv_, ki_, ki_yaw_, k_yaw_);
   const Eigen::Vector4d &trpy = controller_.getControls();
 	if(!isnan(trpy(0))) {
-		trpy_command.thrust = std::min(double(trpy(0)),MAX_THRUST)/MAX_THRUST;
+		trpy_command.thrust = std::min(double(trpy(0)),max_thrust)/max_thrust;
 		trpy_command.roll   = std::min(MAX_ANGLE,std::max(-MAX_ANGLE,trpy(1)));
 		trpy_command.pitch  = std::min(MAX_ANGLE,std::max(-MAX_ANGLE,-trpy(2)));
 		trpy_command.yaw    = -trpy(3);
@@ -88,6 +88,7 @@ int main(int argc, char **argv)
 
   double mass;
   n.param("mass", mass, 0.55);
+	n.param("thrust", max_thrust, 13.184);
   controller_.setMass(mass);
   controller_.setMaxIntegral(mass*1);
 

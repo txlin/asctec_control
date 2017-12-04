@@ -5,6 +5,7 @@
 		required="true"
 		output="screen">
 		<param name="mass" value="0.55"/>
+		<param name="thrust" value="13.5"/>
 		<rosparam param="gains/pos">[6.4, 6.4, 8.3]</rosparam>   
 		<!-- Normal 5.5, 5.5, 8.2 --> 
 		<!-- Aggressive 6.4, 6.4, 8.2 -->

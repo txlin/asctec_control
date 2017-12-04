@@ -5,6 +5,7 @@
 		  required="true"
 		  output="screen">
 		  <param name="mass" value="0.55"/>
+			<param name="thrust" value="13.5"/>
 		  <rosparam param="gains/pos">[1, 1, 4]</rosparam>			<!-- 1 1 4 -->
 		  <rosparam param="gains/vel">[0.75, 0.75, 3.95]</rosparam>   <!-- 0.75 0.75 3.95 -->
 		  <rosparam param="gains/int">[0.0001, 0.0001, 0.0001]</rosparam> <!-- 0.005 -->
