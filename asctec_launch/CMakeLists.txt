@@ -152,6 +152,7 @@ add_executable(test_avoid_node src/obs_avoid_test.cpp)
 add_executable(aggressive_node src/aggressive.cpp)
 add_executable(learn2fly_node src/fly.cpp)
 add_executable(xbox_node src/xbox.cpp)
+add_executable(xbox_duo_node src/xbox_duo.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -176,6 +177,7 @@ add_dependencies(avoid_node so3_control_generate_messages_cpp)
 add_dependencies(test_avoid_node so3_control_generate_messages_cpp)
 add_dependencies(aggressive_node so3_control_generate_messages_cpp)
 add_dependencies(xbox_node so3_control_generate_messages_cpp)
+add_dependencies(xbox_duo_node so3_control_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -224,6 +226,9 @@ target_link_libraries(learn2fly_node
   ${catkin_LIBRARIES}
 )
 target_link_libraries(xbox_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(xbox_duo_node
   ${catkin_LIBRARIES}
 )
 #############

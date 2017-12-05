@@ -1,0 +1,31 @@
+<launch>
+	<arg name="group_ns" value="asctec" />
+	<arg name="asctec_model" value="hb" />
+	<arg name="linear" value="true" />
+	<arg name="port" value="/dev/ttyUSB0"/>
+	<arg name="frame" default="/vicon/hummingbird_1/hummingbird_1" />
+	<arg name="sim" value="false" />
+
+	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
+
+	<group ns="$(arg group_ns)">
+		<node pkg="joy" type="joy_node" name="joystick"/>
+		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
+			<arg name="group_ns" value="$(arg group_ns)" /> 
+			<arg name="asctec_model" value="$(arg asctec_model)" />
+			<arg name="continuous" value="false" />
+			<arg name="viz" value="false"/>
+			<arg name="frame" value="$(arg frame)" />
+			<arg name="linear" value="$(arg linear)" />
+			<arg name="port" value="$(arg port)" />
+			<arg name="sim" value="$(arg sim)" /> 
+			</include>
+
+		<node pkg="asctec_launch"
+			type="xbox_duo_node"
+			name="xbox_duo"
+			output="screen">
+		</node>
+	</group>
+
+</launch>
