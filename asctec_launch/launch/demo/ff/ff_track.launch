@@ -22,7 +22,7 @@
 			</include>
 
 		<node pkg="asctec_launch"
-			type="track_node"
+			type="track_slow_node"
 			name="track"
 			output="screen">
 			<param name="world" value="odom"/>
