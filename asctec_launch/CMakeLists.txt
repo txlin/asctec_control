@@ -144,6 +144,7 @@ add_executable(hover_node src/hover.cpp)
 add_executable(step_node src/step_test.cpp)
 add_executable(wand_node src/wand_demo.cpp)
 add_executable(track_node src/ugv.cpp)
+add_executable(track_slow_node src/ugv_slow.cpp)
 add_executable(square_node src/square.cpp)
 add_executable(spiral_node src/spiral.cpp)
 add_executable(circle_node src/circle.cpp)
@@ -200,6 +201,9 @@ target_link_libraries(wand_node
   ${catkin_LIBRARIES}
 )
 target_link_libraries(track_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(track_slow_node
   ${catkin_LIBRARIES}
 )
 target_link_libraries(square_node
