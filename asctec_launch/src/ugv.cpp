@@ -19,12 +19,12 @@
 #include <string.h>
 
 #define freq 10
-#define maxV 0.4
+#define maxV 0.3
 
-#define XBOUND_H 1.0
-#define XBOUND_L -1.0
-#define YBOUND_H 1.5
-#define YBOUND_L -1.5
+#define XBOUND_H  1.0		//1.0
+#define XBOUND_L -1.0		//1.0
+#define YBOUND_H  1.4		//1.0
+#define YBOUND_L -1.4		//1.0
 #define BORDER_NUMB 2
 #define BORDER_TOP 0.5
 
@@ -36,6 +36,7 @@ bool flying = false;
 bool isDone = true;
 
 float robot_x, robot_y, robot_yaw;
+double quad_yaw = 0.0;
 string world, ugv, topic, quad_frame;
 nav_msgs::Odometry odom_quad_, odom_ugv_;
 
@@ -188,6 +189,7 @@ void sendTrajectory(float time, float x, float y, float z, float yaw)
 	cmd.position.y = y;
 	cmd.position.z = z;
 	cmd.yaw[0] = yaw;
+	cmd.lock_yaw = true;
 	cmd.time = time;
 
 	wpt_pub.publish(cmd);
@@ -197,6 +199,7 @@ void sendTrajectory(float time, float x, float y, float z, float yaw)
 void sendPoint(float x, float y, float vx, float vy, float z, float yaw)
 {
 	asctec_msgs::PositionCmd next;
+	next.header.stamp = ros::Time::now();
 	next.position.x = x;
 	next.position.y = y;
 	next.velocity.x = vx;
@@ -212,13 +215,16 @@ void sendLandTrajectory(float time)
 	cmd.position.x = 0.0;
 	cmd.position.y = 0.0;
 	cmd.position.z = 1.0;
+	cmd.yaw[0] = quad_yaw;
 	cmd.time = time;
+	cmd.lock_yaw = true;
 	wpt_pub.publish(cmd);
 
 	cmd.position.x = 0.0;
 	cmd.position.y = 0.0;
 	cmd.position.z = 0.0;
 	cmd.time = 3;
+	cmd.lock_yaw = true;
 	wpt_pub.publish(cmd);
 
 	isDone = false;
@@ -300,8 +306,12 @@ int main(int argc, char** argv) {
 				if(isDone) {
 					//float tTravel = sqrt(pow(odom_quad_.pose.pose.position.x,2) + pow(odom_quad_.pose.pose.position.y,2) + pow((1 - odom_quad_.pose.pose.position.z),2)) / maxV;
 					float tTravel = 5;
-					sendTrajectory(tTravel, 0.0, 0.0, 1.0, 0.0);
-
+					tf::Quaternion q(odom_quad_.pose.pose.orientation.x, odom_quad_.pose.pose.orientation.y, odom_quad_.pose.pose.orientation.z, odom_quad_.pose.pose.orientation.w);
+					tf::Matrix3x3 m(q);		
+					double dummy_roll, dummy_pitch;			
+					m.getRPY(dummy_roll, dummy_pitch, quad_yaw);
+					sendTrajectory(tTravel, 0.0, 0.0, 1.0, quad_yaw);
+					
 					ROS_INFO("Taking off to 0.0, 0.0, 1.0, time of travel: %f", tTravel);
 					state = 2;
 				}
@@ -323,9 +333,9 @@ int main(int argc, char** argv) {
 					float yawNew = limit(odom_ugv_.pose.pose.orientation.z, M_PI, -M_PI);
 
 					float tTravel = sqrt(pow((xNew - odom_quad_.pose.pose.position.x),2) + pow((yNew - odom_quad_.pose.pose.position.y),2)) / maxV;
-	
+
 					tTravel = limit(tTravel, 10, 1);
-					sendTrajectory(tTravel, xNew, yNew, 1.0, 0.0);																		//Yaw controller needs to be tuned!!
+					sendTrajectory(tTravel, xNew, yNew, 1.0, quad_yaw);																		//Yaw controller needs to be tuned!!
 
 					ROS_INFO("Begin tracking of UGV");
 					state = 3;
@@ -345,7 +355,7 @@ int main(int argc, char** argv) {
 						vyNew = odom_ugv_.twist.twist.linear.y;
 					}
 					float yawNew = limit(odom_ugv_.pose.pose.orientation.z, M_PI, -M_PI);
-					sendPoint(xNew, yNew, vxNew, vyNew, 1.0, 0.0);																			//Yaw controller needs to be tuned!!
+					sendPoint(xNew, yNew, vxNew, vyNew, 1.0, quad_yaw);																			//Yaw controller needs to be tuned!!
 				}
 
 				//Check exit conditions

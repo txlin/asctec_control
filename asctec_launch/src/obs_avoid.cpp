@@ -16,19 +16,22 @@
 
 #define obsNumb 10
 
-#define repel_pts 3.0	//always integer
+#define f_x 0.0
+#define f_y 2.0
+
+#define repel_pts 3	  //always integer
 #define repel 0.8       //radius
 #define repel_t 5.0
 #define repel_rings 2
 #define end_off 0.5
 
-#define real_r  0.14    //11 inches diameter
-#define quad_r 0.27     //21 inches diameter
+#define real_r  0.14     //11 inches diameter
+#define quad_r  0.27     //21 inches diameter
 
 #define freq 10
-#define maxV 0.7
+#define maxV 0.5
 #define maxVZ 0.2
-#define maxA 0.6
+#define maxA 0.3
 
 using namespace std;
 
@@ -135,7 +138,7 @@ void sendAvoidABNew(float wait, float x, float y, float z, float yaw, tf::Stampe
 	asctec_msgs::WaypointCmd cmd, last;
 	//Set first point of obstacle radius
 	cmd.position.x = 0.0;
-	cmd.position.y = obsy - repel*cos(theta) - end_off;
+	cmd.position.y = limit(obsy - repel*cos(theta) - end_off,0,odom_.pose.pose.position.y);
 	cmd.velocity.x = 0.0;
 	cmd.velocity.y = maxV;
 	cmd.accel.x = 0.0;
@@ -274,7 +277,7 @@ void sendAvoidBANew(float wait, float x, float y, float z, float yaw, tf::Stampe
 	asctec_msgs::WaypointCmd cmd, last;
 	//Set first point of obstacle radius
 	cmd.position.x = 0.0;
-	cmd.position.y = obsy + repel*cos(theta) + end_off;
+	cmd.position.y = limit(obsy + repel*cos(theta) + end_off,odom_.pose.pose.position.y,0);
 	cmd.velocity.x = 0.0;
 	cmd.velocity.y = -maxV;
 	cmd.position.z = 1.0;
@@ -400,6 +403,7 @@ void sendTrajectory(float wait, float x, float y, float z, float yaw)
 	cmd.position.x = x;
 	cmd.position.y = y;
 	cmd.position.z = z;
+	cmd.lock_yaw = true;
 	cmd.yaw[0] = yaw;
 	cmd.time = getTravTime(odom_.pose.pose.position.x, x, odom_.pose.pose.position.y, y, odom_.pose.pose.position.z, z);
 
@@ -413,6 +417,7 @@ void sendRiseTrajectory()
 	cmd.position.x = 0;
 	cmd.position.y = 0;
 	cmd.position.z = 1;
+	cmd.lock_yaw = true;
 	cmd.yaw[0] = 0;
 	cmd.time = getTravTimeZ(odom_.pose.pose.position.x, 0, odom_.pose.pose.position.y, 0, odom_.pose.pose.position.z, 1);
 
@@ -426,6 +431,7 @@ void sendLandTrajectory()
 	cmd.position.x = 0.0;
 	cmd.position.y = 0.0;
 	cmd.position.z = 1.0;
+	cmd.lock_yaw = true;
 	cmd.yaw[0] = 0.0;
 	cmd.time = 5;
 	traj_pub.publish(cmd);
@@ -446,8 +452,11 @@ bool obstacleExists(tf::StampedTransform * transform)
 	 * obsx+rad > trajx (0) & obsx-rad < trajx (0)
 	 */
 
-	if(transform->getOrigin().x()+repel > 0 && transform->getOrigin().x()-repel < 0) {
-		ROS_INFO("Obstacled detected, adapting trajectory");
+	if(transform->getOrigin().x()+repel > 0 && 
+		 transform->getOrigin().x()-repel < 0 &&
+		 transform->getOrigin().y() < f_y &&
+		 transform->getOrigin().y() > -f_y) {
+		ROS_INFO("Obstacled detected, adapting trajectory, %f, %f", transform->getOrigin().x(), transform->getOrigin().y());
 		return true;
 	}
 	return false;
@@ -656,10 +665,10 @@ int main(int argc, char** argv) {
 						state = waitB;
 
 						if(obstacleExists(&transform)) {
-							sendAvoidABNew(0,0,2.0,1,0,&transform);
+							sendAvoidABNew(0,f_x,f_y,1,0,&transform);
 
 						}else {
-							sendTrajectory(0,0,2.0,1,0);
+							sendTrajectory(0,f_x,f_y,1,0);
 						}
 					}
 
@@ -686,10 +695,10 @@ int main(int argc, char** argv) {
 						state = waitA;
 
 						if(obstacleExists(&transform)) {
-							sendAvoidBANew(0,0,-2.0,1,0,&transform);
+							sendAvoidBANew(0,f_x,-f_y,1,0,&transform);
 
 						}else {
-							sendTrajectory(0,0,-2.0,1,0);
+							sendTrajectory(0,f_x,-f_y,1,0);
 						}
 					}
 

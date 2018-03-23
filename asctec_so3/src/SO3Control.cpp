@@ -72,7 +72,7 @@ const Eigen::Vector3d &SO3Control::getComputedForce(void)
   return force_;
 }
 
-const double &SO3Control::getComputedYaw(const double kyaw, 
+const double SO3Control::getComputedYaw(const double kyaw, 
 																				 const double kdyaw,
 																				 const double des_yaw,
 																				 const double des_yaw_dot)
