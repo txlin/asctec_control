@@ -1,0 +1,54 @@
+<launch>
+	<arg name="A_tag" value="quadA" />
+	<arg name="B_tag" value="quadB" />
+	<arg name="asctec_model" value="hb" />
+	<arg name="linear" value="true" />
+	<arg name="sim" value="false" />
+	<arg name="portA" value="/dev/ttyUSB0"/>
+	<arg name="portB" value="/dev/ttyUSB1"/>
+	<arg name="frameA" value="/vicon/hummingbird_1/hummingbird_1"/>
+	<arg name="frameB" value="/vicon/hummingbird_2/hummingbird_2"/>
+
+	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
+	<node pkg="joy" type="joy_node" name="joystick"/>
+
+	<!-- Create hummingbird controllers -->
+
+	<group ns="$(arg A_tag)">
+		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
+      <arg name="group_ns" value="$(arg A_tag)" /> 
+			<arg name="asctec_model" value="$(arg asctec_model)" />
+			<arg name="viz" value="true"/>
+			<arg name="rviz" value="link_lab.rviz"/>
+			<arg name="frame" default="$(arg frameA)" />
+			<arg name="continuous" value="false" />
+			<arg name="linear" value="$(arg linear)" />
+      <arg name="sim" value="$(arg sim)" /> 
+			<arg name="port" value="$(arg portA)" />
+    </include>
+	</group>
+
+	<group ns="$(arg B_tag)">
+		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
+      <arg name="group_ns" value="$(arg B_tag)" /> 
+			<arg name="asctec_model" value="$(arg asctec_model)" />
+			<arg name="viz" value="false"/>
+			<arg name="frame" default="$(arg frameB)" />
+			<arg name="continuous" value="false" />
+			<arg name="linear" value="$(arg linear)" />
+      <arg name="sim" value="$(arg sim)" /> 
+			<arg name="port" value="$(arg portB)" />
+    </include>
+	</group>
+
+	<!-- Start link lab demo node -->
+
+	<node pkg="asctec_launch" name="link_lab" type="link_lab_node" output="screen">
+		<param name="x0" value="0.4" />			<!-- defines x offset, moving both quadrotors forward/backward -->
+		<param name="y0" value="1.25 "/>		<!-- defines y distance away from y=0 -->
+		<param name="z0" value="1.5"/>			<!-- defines resting height for ribbon cutting -->
+		<param name="A_namespace" value="$(arg A_tag)"/>
+		<param name="B_namespace" value="$(arg B_tag)"/>
+	</node>
+
+</launch>

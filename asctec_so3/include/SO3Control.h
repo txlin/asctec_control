@@ -25,7 +25,7 @@ class SO3Control
   const Eigen::Vector3d &getComputedForce(void);
   const Eigen::Quaterniond &getComputedOrientation(void);
   const Eigen::Vector3d &getDesiredAngularVelocity(void);
-	const double &getComputedYaw(const double kyaw, 
+	const double getComputedYaw(const double kyaw, 
 															 const double kdyaw,
 															 const double des_yaw,
 															 const double des_yaw_dot);

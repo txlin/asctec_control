@@ -35,6 +35,7 @@ class MinAccel
 		void setCont(bool cont_);	
 
 	private:
+		bool init;
 		bool continuous;
   	ros::Time t0;
     std::vector<MatrixXf *> Xx, Xy, Xz, Xyaw;

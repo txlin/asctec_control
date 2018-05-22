@@ -88,7 +88,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom)
 		des_pos = position;
 		des_vel = Eigen::Vector3d(0, 0, 0);
 		des_acc = Eigen::Vector3d(0, 0, 0);
-		des_yaw = 0.0;
+		des_yaw = tf::getYaw(odom->pose.pose.orientation);
 		des_yaw_dot = 0.0;
 
 		publishSO3Command();

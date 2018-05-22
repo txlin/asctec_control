@@ -32,6 +32,7 @@ MinSnap::MinSnap()
 	path_.color.g = 1.0;
 	path_.color.b = 1.0;
 	continuous = false;
+	init = false;
 }
 
 void MinSnap::setPubSub(ros::NodeHandle *n, float rate)
@@ -253,6 +254,8 @@ asctec_msgs::PositionCmd* MinSnap::getNextCommand(void) {
 		      cmd.yaw[0] += Xyaw.front()->operator()(7-i,0)*pow(t,i);
 		      cmd.yaw[1] += i*Xyaw.front()->operator()(7-i,0)*pow(t,i-1);
 		      cmd.yaw[2] += i*(i-1)*Xyaw.front()->operator()(7-i,0)*pow(t,i-2);
+				}else {
+					cmd.yaw[0] = Byaw(0,0);
 				}
 			if (isnan(cmd.velocity.x)) cmd.velocity.x = cmd_.velocity.x;
 			if (isnan(cmd.velocity.y)) cmd.velocity.y = cmd_.velocity.y;

@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
 	tf::StampedTransform transform;
 	tf::TransformListener listener;
-	listener.waitForTransform(world, frame, ros::Time(0), ros::Duration(3.0));
+	listener.waitForTransform(world, frame, ros::Time(0), ros::Duration(10.0));
 	listener.lookupTransform(world, frame, ros::Time(0), transform);
 
 	odom.pose.pose.position.x = transform.getOrigin().x();
