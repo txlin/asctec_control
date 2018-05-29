@@ -1,0 +1,40 @@
+<launch>
+	<arg name="group_ns" value="asctec" />
+	<arg name="asctec_model" value="hb" />
+	<arg name="linear" value="true" />
+	<arg name="sim" value="false" />
+
+	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
+	
+	<group ns="$(arg group_ns)">
+		<include file="$(find asctec_launch)/basic_launch/min_jerk_wand.launch">
+      		<arg name="group_ns" value="$(arg group_ns)" /> 
+			<arg name="asctec_model" value="$(arg asctec_model)" />
+			<arg name="viz" value="false"/>
+			<arg name="continuous" value="false" />
+			<arg name="linear" value="$(arg linear)" />
+      		<arg name="sim" value="$(arg sim)" /> 
+      		
+    	</include>
+
+		<node pkg="joy" type="joy_node" name="joystick"/>
+		<node pkg="asctec_launch"
+			type="learner_node"
+			name="learning"
+			output="screen">
+			<param name="bounds/velocity" value="0.75"/>
+			<param name="bounds/x" value="1.0"/>
+			<param name="bounds/y" value="1.5"/>
+			<param name="bounds/z" value="1.5"/>
+			
+			<param name="axis/roll" value="2"/>
+			<param name="axis/pitch" value="3"/>
+			<param name="axis/yaw" value="0"/>
+			<param name="axis/thrust" value="1"/>
+			<param name="dead_man_switch" value="5"/>
+			<param name="land_switch" value="4"/>
+
+
+		</node>
+	</group>
+</launch>

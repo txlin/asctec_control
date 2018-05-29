@@ -1,0 +1,43 @@
+<launch>
+	<arg name="group_ns1" value="asctec1" />
+	<arg name="group_ns2" value="asctec2" />
+	<arg name="linear" value="false" />
+	<arg name="asctec_model" value="hb" />
+	<arg name="sim" value="false"/>
+
+	<include file="$(find vicon_bridge)/launch/vicon.launch" unless="$(arg sim)"/>
+	<node pkg="joy" type="joy_node" name="joystick"/>
+	<node pkg="rosbag" type="record" name="exp_record" args="--all"/>
+	<group ns="$(arg group_ns1)">
+		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
+	      		<arg name="group_ns" value="$(arg group_ns1)" /> 
+			<arg name="asctec_model" value="$(arg asctec_model)" />
+	      		<arg name="linear" value="$(arg linear)" />
+     			<arg name="sim" value="$(arg sim)" /> 
+			<arg name="viz" value="true"/>
+			<arg name="continuous" value="false"/>
+			<arg name="rviz" value="dyn.rviz"/>
+    		</include>
+
+	</group>
+
+	<group ns="$(arg group_ns2)">
+		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
+	      		<arg name="group_ns" value="$(arg group_ns2)" /> 
+			<arg name="asctec_model" value="$(arg asctec_model)" />
+	      		<arg name="linear" value="$(arg linear)" />
+     			<arg name="sim" value="$(arg sim)" /> 
+			<arg name="viz" value="false"/>
+			<arg name="continuous" value="false"/>
+			<arg name="frame" value="/vicon/hummingbird_2/hummingbird_2" />
+			<arg name="port" value="/dev/ttyUSB1" />
+    		</include>
+
+	</group>
+	
+	<node pkg="asctec_launch" type="dynamic_obs_constant_node" name="exp" output="screen">
+		<param name="group_ns1" value="$(arg group_ns1)" />
+		<param name="group_ns2" value="$(arg group_ns2)" />
+	</node>
+
+</launch>

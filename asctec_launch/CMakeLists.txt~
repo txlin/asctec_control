@@ -255,9 +255,6 @@ target_link_libraries(dynamic_obs_node
   ${catkin_LIBRARIES}
 )
 
-target_link_libraries(dynamic_obs_constant_node
-  ${catkin_LIBRARIES}
-)
 target_link_libraries(dynamic_obs_viz_node
   ${catkin_LIBRARIES}
 )
