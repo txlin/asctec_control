@@ -1,9 +1,9 @@
 <launch>
 	<arg name="group_ns" value="asctec2" />
-	<arg name="asctec_model" value="pe" />
+	<arg name="asctec_model" value="ff" />
 	<arg name="linear" value="true" />
 	<arg name="port" value="/dev/ttyS3"/>
-	<arg name="frame" default="/vicon/pelican_gr/pelican_gr" />
+	<arg name="frame" default="/vicon/firefly/firefly" />
 	<arg name="sim" value="false" />
 
 	<group ns="$(arg group_ns)">

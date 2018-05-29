@@ -9,12 +9,12 @@
 
 	<group ns="$(arg group_ns)">
 		<include file="$(find asctec_launch)/basic_launch/min_jerk.launch">
-		<arg name="group_ns" value="$(arg group_ns)" /> 
-		<arg name="asctec_model" value="$(arg asctec_model)" />
-		<arg name="linear" value="$(arg linear)" />
-		<arg name="sim" value="$(arg sim)" /> 
-		<arg name="viz" value="true"/>
-		</include>
+      <arg name="group_ns" value="$(arg group_ns)" /> 
+			<arg name="asctec_model" value="$(arg asctec_model)" />
+      <arg name="linear" value="$(arg linear)" />
+      <arg name="sim" value="$(arg sim)" /> 
+			<arg name="viz" value="true"/>
+    </include>
 
 		<node pkg="asctec_launch"
 			type="avoid_node"

@@ -62,9 +62,9 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom)
 
   current_yaw_ = tf::getYaw(odom->pose.pose.orientation);
 
-  controller_.setPosition(position);
-  controller_.setVelocity(velocity);
-  controller_.setYaw(current_yaw_);
+	controller_.setPosition(position);
+	controller_.setVelocity(velocity);
+	controller_.setYaw(current_yaw_);
 
 	if(!position_cmd_init_) {
 		des_pos_ = position;
